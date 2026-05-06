@@ -401,11 +401,19 @@
     await sleep(550);
   }
 
-  // Read whatever label is currently displayed in a PrimeVue Select/Dropdown.
-  function getCurrentSubjectLabel(control) {
-    for (const sel of [".p-select-label", ".p-dropdown-label", ".p-multiselect-label"]) {
-      const el = control.querySelector(sel);
-      if (el) {
+  // Read whatever label is currently displayed in the subject dropdown.
+  // Searches the whole document rather than relying on candidate traversal,
+  // since the label element may not be a direct child of the clickable ancestor.
+  function getCurrentSubjectLabel() {
+    const labelSelectors = [
+      ".p-select-label",
+      ".p-dropdown-label",
+      ".p-multiselect-label",
+      "[data-pc-section='label']",
+    ];
+    for (const sel of labelSelectors) {
+      for (const el of document.querySelectorAll(sel)) {
+        if (!isVisible(el)) continue;
         const text = norm(el.textContent);
         if (text && looksLikeSubjectOption(text)) return text;
       }
@@ -542,7 +550,7 @@
     log(`Found ${allSubjects.length} subjects.`);
 
     // Determine start point from current dropdown selection.
-    const currentLabel = getCurrentSubjectLabel(subjectControl);
+    const currentLabel = getCurrentSubjectLabel();
     let startIndex = 0;
     if (currentLabel) {
       const startCode = currentLabel.split(" - ")[0].trim();

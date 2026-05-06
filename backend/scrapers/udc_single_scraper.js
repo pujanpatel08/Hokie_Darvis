@@ -187,14 +187,19 @@
   }
 
   function readCurrentSubjectLabel() {
-    const candidates = getDropdownCandidates();
-    for (const control of candidates) {
-      for (const sel of [".p-select-label", ".p-dropdown-label", ".p-multiselect-label"]) {
-        const el = control.querySelector(sel);
-        if (el) {
-          const text = norm(el.textContent);
-          if (text && looksLikeSubjectOption(text)) return text;
-        }
+    // Search the whole document rather than relying on candidate traversal,
+    // since the label element may not be a direct child of the clickable ancestor.
+    const labelSelectors = [
+      ".p-select-label",
+      ".p-dropdown-label",
+      ".p-multiselect-label",
+      "[data-pc-section='label']",
+    ];
+    for (const sel of labelSelectors) {
+      for (const el of document.querySelectorAll(sel)) {
+        if (!isVisible(el)) continue;
+        const text = norm(el.textContent);
+        if (text && looksLikeSubjectOption(text)) return text;
       }
     }
     return null;
