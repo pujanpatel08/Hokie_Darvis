@@ -33,3 +33,4 @@ npm-debug.log*
 *.db
 *.sqlite
 *.sqlite3
+chat-bot/
