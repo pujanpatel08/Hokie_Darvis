@@ -6,50 +6,66 @@ window.API = {
 
   // Returns courses matching the given filters.
   // Filtering happens server-side in Supabase — fast even with a large table.
-  async getCourses({ q, subjects, minGpa, minCredits, pathway, limit = 250, offset = 0 } = {}) {
-    let query = window.darvisDb.from('courses').select('*');
+  // Fetches in batches of 1000 and loops until the table is exhausted, so
+  // the full catalog is always returned regardless of how many courses exist.
+  async getCourses({ q, subjects, minGpa, minCredits, pathway } = {}) {
+    const BATCH = 1000;
+    let allData = [];
+    let offset  = 0;
 
-    if (subjects && subjects.length) {
-      query = query.in('subject', subjects);
-    }
-    if (minGpa) {
-      query = query.gte('avg_gpa', parseFloat(minGpa));
-    }
-    if (minCredits) {
-      const c = parseInt(minCredits);
-      if (c >= 4) {
-        // "4+" — everything 4 credits or more
-        query = query.gte('credits', 3.6);
-      } else {
-        // Exact match with ±0.4 bracket for 1, 2, 3
-        query = query.gte('credits', c - 0.4).lte('credits', c + 0.4);
+    while (true) {
+      let query = window.darvisDb.from('courses').select('*');
+
+      if (subjects && subjects.length) {
+        query = query.in('subject', subjects);
       }
-    }
-    if (pathway) {
-      // Postgres array containment: pathways @> ARRAY['5a']
-      query = query.contains('pathways', [pathway]);
-    }
-    if (q && q.trim()) {
-      const safe = q.trim().replace(/[%_]/g, '\\$&');
-      const parts = safe.split(/\s+/);
-      let orFilter = `title.ilike.%${safe}%,course_number.ilike.%${safe}%,subject.ilike.%${safe}%`;
-      if (parts.length >= 2) {
-        // Handle "CS 1014" style queries — first token is subject, rest is course number
-        const subj = parts[0];
-        const num  = parts.slice(1).join(' ');
-        orFilter += `,and(subject.ilike.%${subj}%,course_number.ilike.%${num}%)`;
+      if (minGpa) {
+        query = query.gte('avg_gpa', parseFloat(minGpa));
       }
-      query = query.or(orFilter);
+      if (minCredits) {
+        const c = parseInt(minCredits);
+        if (c >= 4) {
+          // "4+" — everything 4 credits or more
+          query = query.gte('credits', 3.6);
+        } else {
+          // Exact match with ±0.4 bracket for 1, 2, 3
+          query = query.gte('credits', c - 0.4).lte('credits', c + 0.4);
+        }
+      }
+      if (pathway) {
+        // Postgres array containment: pathways @> ARRAY['5a']
+        query = query.contains('pathways', [pathway]);
+      }
+      if (q && q.trim()) {
+        const safe = q.trim().replace(/[%_]/g, '\\$&');
+        const parts = safe.split(/\s+/);
+        let orFilter = `title.ilike.%${safe}%,course_number.ilike.%${safe}%,subject.ilike.%${safe}%`;
+        if (parts.length >= 2) {
+          // Handle "CS 1014" style queries — first token is subject, rest is course number
+          const subj = parts[0];
+          const num  = parts.slice(1).join(' ');
+          orFilter += `,and(subject.ilike.%${subj}%,course_number.ilike.%${num}%)`;
+        }
+        query = query.or(orFilter);
+      }
+
+      query = query
+        .order('subject')
+        .order('course_number')
+        .range(offset, offset + BATCH - 1);
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const rows = data || [];
+      allData = allData.concat(rows);
+
+      // If we got fewer rows than the batch size, we've hit the end.
+      if (rows.length < BATCH) break;
+      offset += BATCH;
     }
 
-    query = query
-      .order('subject')
-      .order('course_number')
-      .range(offset, offset + limit - 1);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return (data || []).map(formatCourse);
+    return allData.map(formatCourse);
   },
 
   // Returns the distinct subject codes present in the courses table.

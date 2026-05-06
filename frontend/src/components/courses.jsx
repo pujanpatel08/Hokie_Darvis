@@ -590,6 +590,110 @@ function CourseCard({ course, darkMode, onClick, onProfClick }) {
   );
 }
 
+// ── FilterSection ─────────────────────────────────────────────────
+// Defined outside FilterPanel so its reference is stable across renders.
+// Prevents React from unmounting/remounting children (like range inputs) on
+// every state update, which was breaking continuous slider drag.
+function FilterSection({ title, divider, faint, children }) {
+  return (
+    <div style={{ borderTop: `1px solid ${divider}`, padding: "20px 0" }}>
+      <div style={{
+        fontSize: 10, fontWeight: 900, color: faint,
+        textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14,
+      }}>{title}</div>
+      {children}
+    </div>
+  );
+}
+
+// ── SubjectSearch ─────────────────────────────────────────────────
+// Replaces the long checkbox list with a chip-based search input.
+function SubjectSearch({ subjects, selected, onChange, darkMode, c }) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen]   = useState(false);
+  const inputRef  = useRef(null);
+  const wrapRef   = useRef(null);
+
+  const filtered = (subjects || []).filter(s =>
+    s.toLowerCase().includes(query.toLowerCase()) && !selected.includes(s)
+  );
+
+  const remove = s => onChange(selected.filter(x => x !== s));
+  const add    = s => { onChange([...selected, s]); setQuery(""); inputRef.current?.focus(); };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = e => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative" }}>
+      {/* Selected chips */}
+      {selected.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+          {selected.map(s => (
+            <span key={s} style={{
+              display: "inline-flex", alignItems: "center", gap: 4,
+              background: "#861F41", color: "white",
+              borderRadius: 20, padding: "3px 10px",
+              fontSize: 11, fontWeight: 700,
+            }}>
+              {s}
+              <button onClick={() => remove(s)} style={{
+                background: "none", border: "none", color: "rgba(255,255,255,0.75)",
+                cursor: "pointer", padding: 0, fontSize: 12, lineHeight: 1, fontWeight: 900,
+              }}>×</button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Search input */}
+      <input
+        ref={inputRef}
+        value={query}
+        onChange={e => { setQuery(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder={selected.length ? "Add another…" : "Search subjects…"}
+        style={{
+          width: "100%", padding: "7px 0",
+          border: "none", borderBottom: `1px solid ${c.divider}`,
+          background: "transparent", color: c.text,
+          fontSize: 12, fontWeight: 500,
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          outline: "none", boxSizing: "border-box",
+        }}
+      />
+
+      {/* Dropdown */}
+      {open && filtered.length > 0 && (
+        <div style={{
+          position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
+          background: darkMode ? "#1a1520" : "white",
+          border: `1px solid ${c.divider}`,
+          borderRadius: 8, marginTop: 2,
+          maxHeight: 200, overflowY: "auto",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+        }}>
+          {filtered.map(s => (
+            <button key={s} onMouseDown={() => add(s)} style={{
+              display: "block", width: "100%", textAlign: "left",
+              padding: "8px 12px", background: "none", border: "none",
+              color: c.text, fontSize: 12, fontWeight: 500,
+              cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = darkMode ? "rgba(255,255,255,0.06)" : "rgba(134,31,65,0.06)"}
+            onMouseLeave={e => e.currentTarget.style.background = "none"}
+            >{s}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── FilterPanel ───────────────────────────────────────────────────
 // Minimal: no surrounding card, hairline section dividers, transparent inputs.
 function FilterPanel({ filters, setFilters, darkMode, subjects }) {
@@ -610,16 +714,10 @@ function FilterPanel({ filters, setFilters, darkMode, subjects }) {
     pillBg:   "rgba(20,16,12,0.04)",
   };
 
-  const checkboxStyle = { accentColor: "#861F41", width: 14, height: 14, cursor: "pointer" };
-
-  const Section = ({ title, children }) => (
-    <div style={{ borderTop: `1px solid ${c.divider}`, padding: "20px 0" }}>
-      <div style={{
-        fontSize: 10, fontWeight: 900, color: c.faint,
-        textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14,
-      }}>{title}</div>
-      {children}
-    </div>
+  // Shorthand that passes color tokens into the stable FilterSection component above.
+  // Using a local alias (not a new component definition) keeps the reference stable.
+  const S = ({ title, children }) => (
+    <FilterSection title={title} divider={c.divider} faint={c.faint}>{children}</FilterSection>
   );
 
   return (
@@ -642,29 +740,25 @@ function FilterPanel({ filters, setFilters, darkMode, subjects }) {
         >Clear all</button>
       </div>
 
-      <Section title="Subject">
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {(subjects || []).map(sub => (
-            <label key={sub} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-              <input type="checkbox" style={checkboxStyle}
-                checked={filters.subjects.includes(sub)}
-                onChange={e => setFilters(f => ({ ...f, subjects: e.target.checked ? [...f.subjects, sub] : f.subjects.filter(s => s !== sub) }))}
-              />
-              <span style={{ fontSize: 13, color: c.text, fontWeight: 500 }}>{sub}</span>
-            </label>
-          ))}
-        </div>
-      </Section>
+      <S title="Subject">
+        <SubjectSearch
+          subjects={subjects}
+          selected={filters.subjects}
+          onChange={subs => setFilters(f => ({ ...f, subjects: subs }))}
+          darkMode={dm}
+          c={c}
+        />
+      </S>
 
-      <Section title={`Min GPA · ${parseFloat(filters.minGpa || 0).toFixed(1)}`}>
-        <input type="range" min="0" max="4" step="0.1"
+      <S title={`Min GPA · ${parseFloat(filters.minGpa || 0).toFixed(2)}`}>
+        <input type="range" min="0" max="4" step="0.01"
           value={filters.minGpa || 0}
           onChange={e => setFilters(f => ({ ...f, minGpa: e.target.value }))}
           style={{ width: "100%", accentColor: "#861F41" }}
         />
-      </Section>
+      </S>
 
-      <Section title="Credits">
+      <S title="Credits">
         <div style={{ display: "flex", gap: 6 }}>
           {["1","2","3","4"].map(cr => {
             const active = filters.minCredits === cr;
@@ -681,17 +775,17 @@ function FilterPanel({ filters, setFilters, darkMode, subjects }) {
             );
           })}
         </div>
-      </Section>
+      </S>
 
-      <Section title={`Max Difficulty · ${parseFloat(filters.maxDiff || 5).toFixed(1)}`}>
+      <S title={`Max Difficulty · ${parseFloat(filters.maxDiff || 5).toFixed(1)}`}>
         <input type="range" min="1" max="5" step="0.1"
           value={filters.maxDiff || 5}
           onChange={e => setFilters(f => ({ ...f, maxDiff: e.target.value }))}
           style={{ width: "100%", accentColor: "#861F41" }}
         />
-      </Section>
+      </S>
 
-      <Section title="Pathways">
+      <S title="Pathways">
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {window.MOCK.pathwaysOptions.filter(pw => !pw.suspended).map(pw => {
             const active = filters.pathway === pw.code;
@@ -722,9 +816,9 @@ function FilterPanel({ filters, setFilters, darkMode, subjects }) {
             );
           })}
         </div>
-      </Section>
+      </S>
 
-      <Section title="Days">
+      <S title="Days">
         <div style={{ display: "flex", gap: 6 }}>
           {["M","T","W","R","F"].map(d => {
             const active = filters.days.includes(d);
@@ -742,12 +836,14 @@ function FilterPanel({ filters, setFilters, darkMode, subjects }) {
             );
           })}
         </div>
-      </Section>
+      </S>
     </div>
   );
 }
 
 // ── Course Search Page ────────────────────────────────────────────
+const PAGE_SIZE = 24;
+
 function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ subjects: [], minGpa: "", maxDiff: "", minCredits: "", maxCredits: "", pathway: "", days: [] });
@@ -756,7 +852,9 @@ function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
   const [courses, setCourses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const debounceRef = useRef(null);
+  const topRef = useRef(null);
   const dm = darkMode;
 
   // Load subject list once on mount
@@ -769,6 +867,7 @@ function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setLoading(true);
+      setPage(1);
       window.API.getCourses({
         q: query,
         subjects: filters.subjects,
@@ -810,6 +909,13 @@ function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
       return 0;
     });
   }, [courses, sort]);
+
+  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageCourses = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const goToPage = p => {
+    setPage(p);
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const activeFilters = filters.subjects.length + (filters.minGpa ? 1 : 0) + (filters.minCredits ? 1 : 0) + (filters.pathway ? 1 : 0) + (filters.days.length ? 1 : 0) + (filters.maxDiff && parseFloat(filters.maxDiff) < 5 ? 1 : 0);
 
@@ -885,7 +991,7 @@ function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
       </header>
 
       {/* ── BODY ──────────────────────────────────────────────────────────────── */}
-      <div style={{
+      <div ref={topRef} style={{
         maxWidth: 1280, margin: "0 auto",
         padding: "40px 64px 96px", boxSizing: "border-box",
         display: "grid",
@@ -956,21 +1062,85 @@ function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
               <div style={{ fontSize: 14, color: c.sub, fontWeight: 500 }}>Try loosening a constraint or clearing the search.</div>
             </div>
           ) : (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: 14,
-            }}>
-              {filtered.map(course => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  darkMode={dm}
-                  onClick={onCourseClick}
-                  onProfClick={onProfClick}
-                />
-              ))}
-            </div>
+            <>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: 14,
+              }}>
+                {pageCourses.map(course => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    darkMode={dm}
+                    onClick={onCourseClick}
+                    onProfClick={onProfClick}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  marginTop: 48, paddingTop: 24, borderTop: `1px solid ${c.divider}`,
+                }}>
+                  <span style={{ fontSize: 12, color: c.faint, fontWeight: 600 }}>
+                    {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <button
+                      onClick={() => goToPage(page - 1)}
+                      disabled={page === 1}
+                      style={{
+                        padding: "6px 12px", borderRadius: 7, border: `1px solid ${c.divider}`,
+                        background: "transparent", color: page === 1 ? c.faint : c.text,
+                        fontWeight: 700, fontSize: 12, cursor: page === 1 ? "default" : "pointer",
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        opacity: page === 1 ? 0.4 : 1, transition: "all 0.15s",
+                      }}
+                    >←</button>
+
+                    {(() => {
+                      const pages = [];
+                      const delta = 2;
+                      const left  = Math.max(1, page - delta);
+                      const right = Math.min(totalPages, page + delta);
+                      if (left > 1) { pages.push(1); if (left > 2) pages.push("…"); }
+                      for (let i = left; i <= right; i++) pages.push(i);
+                      if (right < totalPages) { if (right < totalPages - 1) pages.push("…"); pages.push(totalPages); }
+                      return pages.map((p, i) => p === "…" ? (
+                        <span key={`ellipsis-${i}`} style={{ padding: "6px 4px", color: c.faint, fontSize: 12 }}>…</span>
+                      ) : (
+                        <button key={p} onClick={() => goToPage(p)} style={{
+                          width: 34, height: 34, borderRadius: 7,
+                          border: `1px solid ${p === page ? "#861F41" : c.divider}`,
+                          background: p === page ? "#861F41" : "transparent",
+                          color: p === page ? "white" : c.text,
+                          fontWeight: p === page ? 800 : 600, fontSize: 12,
+                          cursor: p === page ? "default" : "pointer",
+                          fontFamily: "'Plus Jakarta Sans', sans-serif",
+                          transition: "all 0.15s",
+                        }}>{p}</button>
+                      ));
+                    })()}
+
+                    <button
+                      onClick={() => goToPage(page + 1)}
+                      disabled={page === totalPages}
+                      style={{
+                        padding: "6px 12px", borderRadius: 7, border: `1px solid ${c.divider}`,
+                        background: "transparent", color: page === totalPages ? c.faint : c.text,
+                        fontWeight: 700, fontSize: 12,
+                        cursor: page === totalPages ? "default" : "pointer",
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        opacity: page === totalPages ? 0.4 : 1, transition: "all 0.15s",
+                      }}
+                    >→</button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
