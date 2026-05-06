@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Data files (scraped CSVs can be large — store separately or in a private bucket)
+backend/data/raw/*.csv
+backend/data/raw/*.json
+backend/data/canonical/
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# SQLite database files
+*.db
+*.sqlite
+*.sqlite3

@@ -1,0 +1,14 @@
+{
+  "name": "hokie-darvis-backend",
+  "version": "1.0.0",
+  "description": "Data import scripts and scrapers for Hokie Darvis",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "import-grades": "node scripts/import_grades.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.4",
+    "dotenv": "^16.4.5"
+  }
+}

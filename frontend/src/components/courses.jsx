@@ -1,0 +1,981 @@
+// Course Search, Cards, Detail, Grade Grid
+const { useState, useEffect, useRef, useMemo } = React;
+
+// ── GPA Badge ─────────────────────────────────────────────────────
+function GpaBadge({ gpa, large }) {
+  const color = gpa >= 3.5 ? "#1a7a38" : gpa >= 3.0 ? "#2d7a5a" : gpa >= 2.5 ? "#b45309" : "#c0392b";
+  const bg    = gpa >= 3.5 ? "#dcfce7" : gpa >= 3.0 ? "#d1fae5" : gpa >= 2.5 ? "#fef3c7" : "#fee2e2";
+  return (
+    <span style={{
+      background: bg, color, fontWeight: 800,
+      fontSize: large ? 16 : 12, padding: large ? "4px 12px" : "2px 8px",
+      borderRadius: 20, letterSpacing: "-0.3px",
+    }}>
+      {gpa.toFixed(2)} GPA
+    </span>
+  );
+}
+
+// ── Seats Badge ───────────────────────────────────────────────────
+function SeatsBadge({ seats, enrolled }) {
+  const pct = enrolled / seats;
+  const full = pct >= 1;
+  const almostFull = pct >= 0.9;
+  const color = full ? "#c0392b" : almostFull ? "#b45309" : "#1a7a38";
+  const bg    = full ? "#fee2e2"  : almostFull ? "#fef3c7"  : "#dcfce7";
+  return (
+    <span style={{ background: bg, color, fontWeight: 700, fontSize: 12, padding: "2px 8px", borderRadius: 20 }}>
+      {full ? "Full" : `${seats - enrolled} seats`}
+    </span>
+  );
+}
+
+// ── RMP Mini ──────────────────────────────────────────────────────
+function RmpMini({ prof, onClick }) {
+  if (!prof) return null;
+  return (
+    <button onClick={e => { e.stopPropagation(); onClick && onClick(prof); }} style={{
+      display: "flex", alignItems: "center", gap: 5,
+      background: "none", border: "none", cursor: "pointer", padding: 0,
+    }}>
+      <span style={{ fontWeight: 700, fontSize: 12, color: "#861F41" }}>{prof.rmpRating.toFixed(1)}</span>
+      <StarRating rating={prof.rmpRating} size={11} />
+      <span style={{ fontSize: 11, color: "#75787b" }}>({prof.rmpCount})</span>
+    </button>
+  );
+}
+
+// ── Grade Distribution Grid ───────────────────────────────────────
+function GradeGrid({ dist, darkMode }) {
+  const grades = ["A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F","W"];
+  const colors = window.MOCK.gradeColors;
+  const total = grades.reduce((s, g) => s + (dist[g] || 0), 0);
+  if (total === 0) return null;
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+        {grades.map(g => {
+          const pct = Math.round((dist[g] || 0) / total * 100);
+          if (pct === 0) return null;
+          const c = colors[g];
+          return (
+            <div key={g} style={{
+              flex: "0 0 auto",
+              background: c.bg, borderRadius: 8,
+              padding: "6px 10px", textAlign: "center", minWidth: 44,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: c.text }}>{g}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: c.text }}>{pct}%</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Section Row ───────────────────────────────────────────────────
+function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, darkMode }) {
+  const prof = window.MOCK.getProf(section.profId);
+  const dm = darkMode;
+  const colors = dm
+    ? { border: "rgba(255,255,255,0.08)", text: "#f0edf3", sub: "rgba(255,255,255,0.38)" }
+    : { border: "rgba(20,16,12,0.10)",   text: "#1a1210", sub: "rgba(20,16,12,0.55)" };
+  const full = section.enrolled >= section.seats;
+
+  return (
+    <div style={{
+      display: "grid", gridTemplateColumns: "70px 1fr 140px 100px 100px 90px",
+      gap: 12, padding: "12px 16px", alignItems: "center",
+      borderBottom: `1px solid ${colors.border}`,
+      fontSize: 13,
+    }}>
+      <div style={{ fontFamily: "monospace", fontWeight: 700, color: "#861F41", fontSize: 12 }}>{section.crn}</div>
+      <div>
+        <button onClick={() => onProfClick(prof)} style={{
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+          color: colors.text, fontWeight: 600, fontSize: 13, textDecoration: "underline",
+          fontFamily: "'Plus Jakarta Sans', sans-serif", textAlign: "left",
+        }}>{prof?.name || "Staff"}</button>
+        {prof && <div style={{ marginTop: 2 }}><RmpMini prof={prof} onClick={onProfClick} /></div>}
+      </div>
+      <div style={{ color: colors.text, fontSize: 12 }}>
+        <div style={{ fontWeight: 700 }}>{section.days.join("")} {window.MOCK.formatTime(section.startTime)}</div>
+        <div style={{ color: colors.sub }}>→ {window.MOCK.formatTime(section.endTime)}</div>
+      </div>
+      <div style={{ color: colors.sub, fontSize: 12 }}>{section.location}</div>
+      <div><SeatsBadge seats={section.seats} enrolled={section.enrolled} /></div>
+      <div>
+        {inSchedule ? (
+          <button onClick={() => onRemove(section.id)} style={{
+            background: "rgba(192,57,43,0.18)", color: "#f87171", border: "1px solid rgba(248,113,113,0.3)",
+            borderRadius: 7, padding: "5px 12px", cursor: "pointer",
+            fontWeight: 700, fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
+          }}>Remove</button>
+        ) : (
+          <button onClick={() => !full && onAdd(section.id)} disabled={full} style={{
+            background: full ? "rgba(255,255,255,0.06)" : "#861F41",
+            color: full ? colors.sub : "white", border: "none",
+            borderRadius: 7, padding: "5px 12px",
+            cursor: full ? "not-allowed" : "pointer",
+            fontWeight: 700, fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
+            opacity: full ? 0.5 : 1,
+          }}>{full ? "Full" : "Add"}</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Section Breakdown Table ───────────────────────────────────────
+function SectionBreakdown({ sections, darkMode }) {
+  const dm = darkMode;
+  const [sortKey, setSortKey] = useState('year');
+  const [sortDir, setSortDir] = useState('desc');
+  const [instrFilter, setInstrFilter] = useState('');
+
+  const colors = {
+    border:   dm ? "#3d3050" : "#e5e0ea",
+    text:     dm ? "#f0edf3" : "#1c1a1e",
+    sub:      dm ? "#998ba8" : "#75787b",
+    inputBg:  dm ? "#2a2030" : "white",
+    headerBg: dm ? "#2a2030" : "#f0edf8",
+    rowAlt:   dm ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+  };
+
+  const instructors = useMemo(() =>
+    [...new Set(sections.map(s => s.instructor))].sort(), [sections]);
+
+  const sorted = useMemo(() => {
+    let list = instrFilter
+      ? sections.filter(s => s.instructor === instrFilter)
+      : [...sections];
+    list.sort((a, b) => {
+      let av, bv;
+      if (sortKey === 'year')      { av = `${a.academicYear}${a.term}`; bv = `${b.academicYear}${b.term}`; }
+      else if (sortKey === 'gpa')  { av = a.gpa || 0;                    bv = b.gpa || 0; }
+      else if (sortKey === 'instr'){ av = a.instructor;                  bv = b.instructor; }
+      else if (sortKey === 'enr')  { av = a.gradedEnrollment;            bv = b.gradedEnrollment; }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }, [sections, sortKey, sortDir, instrFilter]);
+
+  const toggleSort = (key) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('desc'); }
+  };
+
+  const Arrow = ({ k }) => (
+    <span style={{ marginLeft: 3, opacity: sortKey === k ? 1 : 0.25 }}>
+      {sortKey === k ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
+    </span>
+  );
+
+  const GradeBar = ({ dist }) => {
+    const a = (dist['A'] || 0) + (dist['A-'] || 0);
+    const b = (dist['B+'] || 0) + (dist['B'] || 0) + (dist['B-'] || 0);
+    const c = (dist['C+'] || 0) + (dist['C'] || 0) + (dist['C-'] || 0);
+    const d = (dist['D+'] || 0) + (dist['D'] || 0) + (dist['D-'] || 0);
+    const f = dist['F'] || 0;
+    const total = a + b + c + d + f;
+    if (total === 0) return <span style={{ color: colors.sub, fontSize: 11 }}>—</span>;
+    const segs = [
+      { pct: a / total * 100, color: '#16a34a', key: 'A' },
+      { pct: b / total * 100, color: '#0891b2', key: 'B' },
+      { pct: c / total * 100, color: '#d97706', key: 'C' },
+      { pct: d / total * 100, color: '#ea580c', key: 'D' },
+      { pct: f / total * 100, color: '#dc2626', key: 'F' },
+    ].filter(s => s.pct > 0);
+    return (
+      <div style={{ display: 'flex', height: 22, borderRadius: 5, overflow: 'hidden', width: 240, gap: 1 }}>
+        {segs.map((s, i) => (
+          <div key={i} title={`${s.key}: ${s.pct.toFixed(0)}%`} style={{
+            flexGrow: s.pct, flexShrink: 1, flexBasis: 0,
+            minWidth: 26, background: s.color,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
+          }}>
+            <span style={{ fontSize: 9, fontWeight: 800, color: 'white', whiteSpace: 'nowrap', lineHeight: 1 }}>
+              {s.pct.toFixed(0)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const th = (label, key) => (
+    <th
+      onClick={key ? () => toggleSort(key) : undefined}
+      style={{
+        padding: '8px 10px', textAlign: 'left', fontSize: 11, fontWeight: 800,
+        color: sortKey === key ? '#861F41' : colors.sub,
+        textTransform: 'uppercase', letterSpacing: '0.5px',
+        cursor: key ? 'pointer' : 'default',
+        whiteSpace: 'nowrap', background: colors.headerBg,
+        borderBottom: `1px solid ${colors.border}`, userSelect: 'none',
+      }}
+    >
+      {label}{key && <Arrow k={key} />}
+    </th>
+  );
+
+  return (
+    <div>
+      {/* Instructor filter */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, color: colors.sub, fontWeight: 600 }}>Instructor:</span>
+        <select
+          value={instrFilter}
+          onChange={e => setInstrFilter(e.target.value)}
+          style={{
+            padding: '4px 10px', borderRadius: 7,
+            border: `1.5px solid ${colors.border}`,
+            background: colors.inputBg, color: colors.text,
+            fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer',
+          }}
+        >
+          <option value="">All ({sections.length} sections)</option>
+          {instructors.map(i => (
+            <option key={i} value={i}>
+              {i} ({sections.filter(s => s.instructor === i).length})
+            </option>
+          ))}
+        </select>
+        <span style={{ fontSize: 12, color: colors.sub }}>{sorted.length} section{sorted.length !== 1 ? 's' : ''} shown</span>
+      </div>
+
+      {/* Grade bar legend */}
+      <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+        {[
+          { color: '#16a34a', label: 'A  (A, A-)' },
+          { color: '#0891b2', label: 'B  (B+, B, B-)' },
+          { color: '#d97706', label: 'C  (C+, C, C-)' },
+          { color: '#ea580c', label: 'D  (D+, D, D-)' },
+          { color: '#dc2626', label: 'F' },
+        ].map(({ color, label }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 12, height: 12, borderRadius: 3, background: color, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: colors.sub, fontWeight: 600 }}>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div style={{ overflowX: 'auto', borderRadius: 10, border: `1px solid ${colors.border}` }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr>
+              {th('Year',       'year')}
+              {th('Term',       null)}
+              {th('CRN',        null)}
+              {th('Instructor', 'instr')}
+              {th('Enrolled',   'enr')}
+              {th('W',          null)}
+              {th('GPA',        'gpa')}
+              {th('Grades',     null)}
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((s, i) => (
+              <tr key={i} style={{
+                borderBottom: `1px solid ${colors.border}`,
+                background: i % 2 === 0 ? 'transparent' : colors.rowAlt,
+              }}>
+                <td style={{ padding: '8px 10px', color: colors.sub, fontSize: 12, whiteSpace: 'nowrap' }}>{s.academicYear || '—'}</td>
+                <td style={{ padding: '8px 10px', color: colors.sub, fontSize: 12 }}>{s.term || '—'}</td>
+                <td style={{ padding: '8px 10px', fontFamily: 'monospace', color: '#861F41', fontSize: 11, fontWeight: 700 }}>{s.crn || '—'}</td>
+                <td style={{ padding: '8px 10px', color: colors.text, fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' }}>{s.instructor || '—'}</td>
+                <td style={{ padding: '8px 10px', color: colors.text, fontSize: 12, textAlign: 'right' }}>{s.gradedEnrollment || '—'}</td>
+                <td style={{ padding: '8px 10px', color: s.withdraws > 0 ? '#b45309' : colors.sub, fontSize: 12, textAlign: 'right' }}>
+                  {s.withdraws > 0 ? s.withdraws : '—'}
+                </td>
+                <td style={{ padding: '8px 10px' }}>
+                  {s.gpa != null
+                    ? <GpaBadge gpa={s.gpa} />
+                    : <span style={{ color: colors.sub }}>—</span>}
+                </td>
+                <td style={{ padding: '8px 10px' }}><GradeBar dist={s.gradeDistribution} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Course Detail Modal ───────────────────────────────────────────
+function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onClose, onProfClick }) {
+  const dm = darkMode;
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(true);
+
+  // Fetch full grade detail (rawSections, instructors, etc.) when modal opens
+  useEffect(() => {
+    setDetailLoading(true);
+    setDetail(null);
+    window.API.getCourse(course.subject, course.number)
+      .then(d => { setDetail(d); setDetailLoading(false); })
+      .catch(() => setDetailLoading(false));
+  }, [course.subject, course.number]);
+
+  const sections = window.MOCK.getSections(course.id);
+  const profs = [...new Set(sections.map(s => s.profId))].map(id => window.MOCK.getProf(id)).filter(Boolean);
+  const colors = dm ? {
+    bg:      "#0f0f0f",
+    surface: "#141414",
+    border:  "rgba(255,255,255,0.08)",
+    text:    "#f0edf3",
+    sub:     "rgba(255,255,255,0.38)",
+  } : {
+    bg:      "#ffffff",
+    surface: "#faf7f3",
+    border:  "rgba(20,16,12,0.10)",
+    text:    "#1a1210",
+    sub:     "rgba(20,16,12,0.55)",
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 300,
+      background: "rgba(0,0,0,0.5)", display: "flex",
+      alignItems: "flex-start", justifyContent: "center", padding: "40px 24px",
+      overflowY: "auto",
+    }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{
+        background: colors.bg, borderRadius: 20,
+        boxShadow: "0 24px 80px rgba(0,0,0,0.25)",
+        width: "100%", maxWidth: 1040,
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        border: `1px solid ${colors.border}`,
+        marginBottom: 40,
+      }}>
+        {/* Header */}
+        <div style={{ padding: "28px 32px 0", borderBottom: `1px solid ${colors.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <span style={{ background: "#861F41", color: "white", borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: 13, letterSpacing: "0.5px" }}>
+                  {course.subject} {course.number}
+                </span>
+                <span style={{ background: dm ? "#3d3050" : "#f0edf8", color: dm ? "#c8b8d8" : "#5a3a6a", fontWeight: 700, fontSize: 12, padding: "4px 10px", borderRadius: 8 }}>
+                  {course.credits} credits
+                </span>
+                <GpaBadge gpa={course.avgGpa} />
+              </div>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: colors.text }}>{course.title}</h2>
+            </div>
+            <button onClick={onClose} style={{
+              background: dm ? "#3d3050" : "#f0f0f0", border: "none", borderRadius: 8,
+              width: 36, height: 36, cursor: "pointer", fontSize: 18, color: colors.sub, flexShrink: 0,
+            }}>✕</button>
+          </div>
+
+          <p style={{ color: colors.sub, fontSize: 14, margin: "0 0 20px", lineHeight: 1.6 }}>{course.description}</p>
+
+          {course.pathways && course.pathways.length > 0 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
+              {course.pathways.map(code => {
+                const pw = window.MOCK.pathwaysOptions.find(p => p.code === code);
+                if (!pw) return null;
+                return (
+                  <span key={code} style={{
+                    background: dm ? "rgba(255,255,255,0.07)" : pw.bg,
+                    color: dm ? "#c8b8d8" : pw.color,
+                    border: `1px solid ${dm ? "rgba(255,255,255,0.15)" : pw.color + "55"}`,
+                    borderRadius: 20, padding: "4px 12px", fontSize: 12, fontWeight: 700,
+                    display: "flex", alignItems: "center", gap: 5,
+                  }}>
+                    <span style={{ opacity: 0.7, fontSize: 10 }}>Concept {code}{pw.suspended ? " ✦" : ""}</span>
+                    <span>{pw.label}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Professors */}
+        {profs.length > 0 && (
+          <div style={{ padding: "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
+            <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>Instructors</h3>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              {profs.map(prof => (
+                <button key={prof.id} onClick={() => onProfClick(prof)} style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                  background: colors.surface, borderRadius: 12, border: `1px solid ${colors.border}`,
+                  cursor: "pointer", textAlign: "left",
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: "50%", background: "#861F41",
+                    color: "white", fontWeight: 800, fontSize: 16,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>{prof.name.split(" ").pop().charAt(0)}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: colors.text }}>{prof.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                      <StarRating rating={prof.rmpRating} size={12} />
+                      <span style={{ fontSize: 12, color: colors.sub }}>{prof.rmpRating.toFixed(1)} · Diff {prof.rmpDifficulty.toFixed(1)}</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Grade Distribution */}
+        <div style={{ padding: "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
+          <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>Grade Distribution (All Sections)</h3>
+          <GradeGrid dist={course.gradeDistribution} darkMode={dm} />
+        </div>
+
+        {/* Section Breakdown */}
+        <div style={{ padding: "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
+          <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+            Section-by-Section Breakdown
+            {detail && <span style={{ marginLeft: 8, fontWeight: 600, textTransform: "none", letterSpacing: 0, fontSize: 13 }}>— {detail.rawSections.length} sections on record</span>}
+          </h3>
+          {detailLoading ? (
+            <div style={{ color: colors.sub, fontSize: 13 }}>Loading breakdown…</div>
+          ) : detail && detail.rawSections.length > 0 ? (
+            <SectionBreakdown sections={detail.rawSections} darkMode={dm} />
+          ) : (
+            <div style={{ color: colors.sub, fontSize: 13 }}>No section data available.</div>
+          )}
+        </div>
+
+        {/* Sections */}
+        <div style={{ padding: "20px 0 0" }}>
+          <h3 style={{ margin: "0 0 0", padding: "0 32px 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+            Available Sections — Fall 2025
+          </h3>
+          <div style={{
+            display: "grid", gridTemplateColumns: "70px 1fr 140px 100px 100px 90px",
+            gap: 12, padding: "8px 16px", fontSize: 11, fontWeight: 800,
+            color: colors.sub, textTransform: "uppercase", letterSpacing: "0.5px",
+            borderBottom: `1px solid ${colors.border}`,
+          }}>
+            <div>CRN</div><div>Instructor</div><div>Time</div><div>Location</div><div>Seats</div><div>Action</div>
+          </div>
+          {sections.length === 0 ? (
+            <div style={{ padding: "24px 32px", color: colors.sub, textAlign: "center" }}>No sections available this term.</div>
+          ) : sections.map(sec => (
+            <SectionRow
+              key={sec.id}
+              section={sec}
+              user={user}
+              onAdd={onAdd}
+              onRemove={onRemove}
+              inSchedule={schedule.includes(sec.id)}
+              onProfClick={onProfClick}
+              darkMode={dm}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Course Card ───────────────────────────────────────────────────
+// Minimal, magazine-style: hairline border, generous whitespace, eyebrow + heavy title.
+function CourseCard({ course, darkMode, onClick, onProfClick }) {
+  const dm = darkMode;
+  const sections = window.MOCK.getSections(course.id);
+  const profIds = [...new Set(sections.map(s => s.profId))];
+  const profs = profIds.map(id => window.MOCK.getProf(id)).filter(Boolean);
+  const totalSeats = sections.reduce((s, sec) => s + sec.seats, 0);
+  const totalEnrolled = sections.reduce((s, sec) => s + sec.enrolled, 0);
+  const seatsLeft = totalSeats - totalEnrolled;
+
+  const c = dm ? {
+    bg:       "transparent",
+    bgHov:    "rgba(255,255,255,0.02)",
+    border:   "rgba(255,255,255,0.08)",
+    text:     "#f0edf3",
+    sub:      "rgba(255,255,255,0.40)",
+    faint:    "rgba(255,255,255,0.22)",
+    divider:  "rgba(255,255,255,0.06)",
+  } : {
+    bg:       "transparent",
+    bgHov:    "rgba(20,16,12,0.025)",
+    border:   "rgba(20,16,12,0.10)",
+    text:     "#1a1210",
+    sub:      "rgba(20,16,12,0.55)",
+    faint:    "rgba(20,16,12,0.32)",
+    divider:  "rgba(20,16,12,0.08)",
+  };
+
+  // GPA color tint, kept understated
+  const gpa = course.avgGpa || 0;
+  const gpaCol = gpa >= 3.3 ? "#4ade80" : gpa >= 3.0 ? "#86efac" : gpa >= 2.7 ? "#fbbf24" : "#f87171";
+
+  const [hov, setHov] = useState(false);
+
+  return (
+    <div
+      onClick={() => onClick(course)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        background: hov ? c.bgHov : c.bg,
+        border: `1px solid ${hov ? "rgba(134,31,65,0.55)" : c.border}`,
+        borderRadius: 14, padding: "22px 22px 18px", cursor: "pointer",
+        transition: "border-color 0.18s ease, background 0.18s ease, transform 0.18s ease",
+        transform: hov ? "translateY(-2px)" : "none",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        display: "flex", flexDirection: "column",
+      }}
+    >
+      {/* Eyebrow row: course code + GPA */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+        <span style={{
+          fontSize: 10, fontWeight: 900, color: "#861F41",
+          letterSpacing: "1.2px", textTransform: "uppercase",
+        }}>{course.subject} {course.number}</span>
+        <span style={{ fontSize: 11, fontWeight: 800, color: gpaCol, letterSpacing: "0.3px" }}>
+          {gpa.toFixed(2)}
+        </span>
+      </div>
+
+      {/* Title */}
+      <h3 style={{
+        margin: "0 0 14px", fontSize: 17, fontWeight: 800,
+        color: c.text, lineHeight: 1.32, letterSpacing: "-0.3px",
+      }}>{course.title}</h3>
+
+      {/* Professors — first one only, kept light */}
+      {profs.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: c.sub, fontWeight: 500 }}>{profs[0].name}</span>
+          <RmpMini prof={profs[0]} onClick={onProfClick} />
+          {profs.length > 1 && (
+            <span style={{ fontSize: 11, color: c.faint, fontWeight: 600 }}>+{profs.length - 1} more</span>
+          )}
+        </div>
+      )}
+
+      {/* Pathways — tiny uppercase letters, no chip bg */}
+      {course.pathways && course.pathways.length > 0 && (
+        <div style={{
+          display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14,
+          fontSize: 9, fontWeight: 800, letterSpacing: "1px",
+          color: c.faint, textTransform: "uppercase",
+        }}>
+          {course.pathways.map(code => {
+            const pw = window.MOCK.pathwaysOptions.find(p => p.code === code);
+            if (!pw) return null;
+            return <span key={code} title={pw.label}>· Concept {code}{pw.suspended ? " ✦" : ""}</span>;
+          })}
+        </div>
+      )}
+
+      {/* Footer — pushed to bottom with margin-top auto */}
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${c.divider}`,
+        fontSize: 11, fontWeight: 600, color: c.sub, letterSpacing: "0.2px",
+      }}>
+        <span>{course.credits} cr · {sections.length} section{sections.length !== 1 ? "s" : ""}</span>
+        <span style={{ color: seatsLeft <= 0 ? "#f87171" : seatsLeft < 10 ? "#fbbf24" : c.sub }}>
+          {seatsLeft <= 0 ? "Full" : `${seatsLeft} seats`}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── FilterPanel ───────────────────────────────────────────────────
+// Minimal: no surrounding card, hairline section dividers, transparent inputs.
+function FilterPanel({ filters, setFilters, darkMode, subjects }) {
+  const dm = darkMode;
+  const c = dm ? {
+    text:     "#f0edf3",
+    sub:      "rgba(255,255,255,0.40)",
+    faint:    "rgba(255,255,255,0.22)",
+    divider:  "rgba(255,255,255,0.08)",
+    inputBg:  "transparent",
+    pillBg:   "rgba(255,255,255,0.04)",
+  } : {
+    text:     "#1a1210",
+    sub:      "rgba(20,16,12,0.55)",
+    faint:    "rgba(20,16,12,0.32)",
+    divider:  "rgba(20,16,12,0.10)",
+    inputBg:  "transparent",
+    pillBg:   "rgba(20,16,12,0.04)",
+  };
+
+  const checkboxStyle = { accentColor: "#861F41", width: 14, height: 14, cursor: "pointer" };
+
+  const Section = ({ title, children }) => (
+    <div style={{ borderTop: `1px solid ${c.divider}`, padding: "20px 0" }}>
+      <div style={{
+        fontSize: 10, fontWeight: 900, color: c.faint,
+        textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14,
+      }}>{title}</div>
+      {children}
+    </div>
+  );
+
+  return (
+    <div style={{
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
+      position: "sticky", top: 80, maxHeight: "calc(100vh - 120px)", overflowY: "auto",
+      paddingRight: 8,
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingBottom: 14 }}>
+        <span style={{
+          fontSize: 10, fontWeight: 900, color: "#861F41",
+          letterSpacing: "1.5px", textTransform: "uppercase",
+        }}>Filter</span>
+        <button onClick={() => setFilters({ subjects: [], minGpa: "", maxDiff: "", minCredits: "", maxCredits: "", pathway: "", days: [] })} style={{
+          background: "none", border: "none", color: c.faint, fontSize: 11, fontWeight: 700,
+          cursor: "pointer", padding: 0, letterSpacing: "0.3px",
+        }}
+        onMouseEnter={e => e.currentTarget.style.color = "#861F41"}
+        onMouseLeave={e => e.currentTarget.style.color = c.faint}
+        >Clear all</button>
+      </div>
+
+      <Section title="Subject">
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {(subjects || []).map(sub => (
+            <label key={sub} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+              <input type="checkbox" style={checkboxStyle}
+                checked={filters.subjects.includes(sub)}
+                onChange={e => setFilters(f => ({ ...f, subjects: e.target.checked ? [...f.subjects, sub] : f.subjects.filter(s => s !== sub) }))}
+              />
+              <span style={{ fontSize: 13, color: c.text, fontWeight: 500 }}>{sub}</span>
+            </label>
+          ))}
+        </div>
+      </Section>
+
+      <Section title={`Min GPA · ${parseFloat(filters.minGpa || 0).toFixed(1)}`}>
+        <input type="range" min="0" max="4" step="0.1"
+          value={filters.minGpa || 0}
+          onChange={e => setFilters(f => ({ ...f, minGpa: e.target.value }))}
+          style={{ width: "100%", accentColor: "#861F41" }}
+        />
+      </Section>
+
+      <Section title="Credits">
+        <div style={{ display: "flex", gap: 6 }}>
+          {["1","2","3","4"].map(cr => {
+            const active = filters.minCredits === cr;
+            return (
+              <button key={cr} onClick={() => setFilters(f => ({ ...f, minCredits: f.minCredits === cr ? "" : cr }))} style={{
+                flex: 1, padding: "8px 0", borderRadius: 8,
+                border: `1px solid ${active ? "#861F41" : c.divider}`,
+                background: active ? "#861F41" : "transparent",
+                color: active ? "white" : c.text,
+                fontWeight: 700, fontSize: 12, cursor: "pointer",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                transition: "all 0.15s ease",
+              }}>{cr === "4" ? "4+" : cr}</button>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section title={`Max Difficulty · ${parseFloat(filters.maxDiff || 5).toFixed(1)}`}>
+        <input type="range" min="1" max="5" step="0.1"
+          value={filters.maxDiff || 5}
+          onChange={e => setFilters(f => ({ ...f, maxDiff: e.target.value }))}
+          style={{ width: "100%", accentColor: "#861F41" }}
+        />
+      </Section>
+
+      <Section title="Pathways">
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {window.MOCK.pathwaysOptions.filter(pw => !pw.suspended).map(pw => {
+            const active = filters.pathway === pw.code;
+            return (
+              <button
+                key={pw.code}
+                onClick={() => setFilters(f => ({ ...f, pathway: f.pathway === pw.code ? "" : pw.code }))}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "8px 4px", cursor: "pointer", textAlign: "left",
+                  border: "none", borderLeft: `2px solid ${active ? "#861F41" : "transparent"}`,
+                  paddingLeft: active ? 10 : 12,
+                  background: "transparent",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <span style={{
+                  flexShrink: 0, fontSize: 10, fontWeight: 900,
+                  color: active ? "#861F41" : c.faint,
+                  letterSpacing: "0.5px", minWidth: 22,
+                }}>{pw.code}</span>
+                <span style={{
+                  fontSize: 12, fontWeight: 500, lineHeight: 1.4,
+                  color: active ? c.text : c.sub,
+                }}>{pw.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section title="Days">
+        <div style={{ display: "flex", gap: 6 }}>
+          {["M","T","W","R","F"].map(d => {
+            const active = filters.days.includes(d);
+            return (
+              <button key={d} onClick={() => setFilters(f => ({ ...f, days: f.days.includes(d) ? f.days.filter(x => x !== d) : [...f.days, d] }))} style={{
+                flex: 1, padding: "8px 0", borderRadius: 8,
+                border: `1px solid ${active ? "#861F41" : c.divider}`,
+                background: active ? "#861F41" : "transparent",
+                color: active ? "white" : c.text,
+                fontWeight: 800, fontSize: 11, cursor: "pointer",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                letterSpacing: "0.5px",
+                transition: "all 0.15s ease",
+              }}>{d}</button>
+            );
+          })}
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+// ── Course Search Page ────────────────────────────────────────────
+function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
+  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState({ subjects: [], minGpa: "", maxDiff: "", minCredits: "", maxCredits: "", pathway: "", days: [] });
+  const [sort, setSort] = useState("subject");
+  const [showFilters, setShowFilters] = useState(true);
+  const [courses, setCourses] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const debounceRef = useRef(null);
+  const dm = darkMode;
+
+  // Load subject list once on mount
+  useEffect(() => {
+    window.API.getSubjects().then(setSubjects).catch(console.error);
+  }, []);
+
+  // Fetch courses from Supabase whenever query or filterable fields change (300ms debounce)
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setLoading(true);
+      window.API.getCourses({
+        q: query,
+        subjects: filters.subjects,
+        minGpa: filters.minGpa,
+        minCredits: filters.minCredits,
+        pathway: filters.pathway,
+      }).then(data => {
+        setCourses(data);
+        setLoading(false);
+      }).catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+    }, 300);
+  }, [query, filters.subjects, filters.minGpa, filters.minCredits, filters.pathway]);
+
+  const c = dm ? {
+    bg:       "#0a0a0a",
+    text:     "#f0edf3",
+    sub:      "rgba(255,255,255,0.45)",
+    faint:    "rgba(255,255,255,0.22)",
+    divider:  "rgba(255,255,255,0.08)",
+    inputBg:  "transparent",
+  } : {
+    bg:       "#fbf8f4",
+    text:     "#1a1210",
+    sub:      "rgba(20,16,12,0.55)",
+    faint:    "rgba(20,16,12,0.32)",
+    divider:  "rgba(20,16,12,0.10)",
+    inputBg:  "transparent",
+  };
+
+  // Sorting only — all filtering is handled server-side by the API
+  const filtered = useMemo(() => {
+    return [...courses].sort((a, b) => {
+      if (sort === "gpa") return b.avgGpa - a.avgGpa;
+      if (sort === "subject") return `${a.subject}${a.number}`.localeCompare(`${b.subject}${b.number}`);
+      if (sort === "title") return a.title.localeCompare(b.title);
+      return 0;
+    });
+  }, [courses, sort]);
+
+  const activeFilters = filters.subjects.length + (filters.minGpa ? 1 : 0) + (filters.minCredits ? 1 : 0) + (filters.pathway ? 1 : 0) + (filters.days.length ? 1 : 0) + (filters.maxDiff && parseFloat(filters.maxDiff) < 5 ? 1 : 0);
+
+  const SortBtn = ({ value, label }) => {
+    const active = sort === value;
+    return (
+      <button onClick={() => setSort(value)} style={{
+        background: "none", border: "none", padding: "4px 0",
+        color: active ? c.text : c.faint,
+        fontWeight: active ? 800 : 600, fontSize: 12,
+        letterSpacing: "0.3px", cursor: "pointer",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        borderBottom: `1.5px solid ${active ? "#861F41" : "transparent"}`,
+        transition: "color 0.15s ease, border-color 0.15s ease",
+      }}>{label}</button>
+    );
+  };
+
+  return (
+    <div style={{ background: c.bg, minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+
+      {/* ── HEADER ────────────────────────────────────────────────────────────── */}
+      <header style={{
+        maxWidth: 1280, margin: "0 auto",
+        padding: "72px 64px 36px", boxSizing: "border-box",
+        borderBottom: `1px solid ${c.divider}`,
+      }}>
+        {/* Eyebrow */}
+        <span style={{
+          fontSize: 10, fontWeight: 900, letterSpacing: "2.5px",
+          color: "#861F41", textTransform: "uppercase",
+        }}>Virginia Tech · Course Catalog</span>
+
+        {/* Headline */}
+        <h1 style={{
+          margin: "20px 0 14px",
+          fontSize: "clamp(40px, 5.5vw, 76px)", fontWeight: 900,
+          color: c.text, letterSpacing: "-3px", lineHeight: 0.98,
+        }}>
+          Browse <span style={{ color: "#861F41" }}>courses.</span>
+        </h1>
+
+        {/* Subtitle */}
+        <p style={{
+          margin: "0 0 36px", maxWidth: 520,
+          fontSize: 15, color: c.sub, lineHeight: 1.7, fontWeight: 500,
+        }}>
+          {loading
+            ? "Loading the catalog…"
+            : `${filtered.length} courses · Real grade distributions · RateMyProfessor ratings.`}
+        </p>
+
+        {/* Search */}
+        <div style={{ position: "relative", maxWidth: 560 }}>
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search course name, number, or subject"
+            style={{
+              width: "100%", padding: "14px 16px 14px 0",
+              border: "none",
+              borderBottom: `1px solid ${c.divider}`,
+              background: c.inputBg, color: c.text,
+              fontSize: 16, fontWeight: 500,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              boxSizing: "border-box", outline: "none",
+              transition: "border-color 0.2s ease",
+            }}
+            onFocus={e => e.currentTarget.style.borderBottomColor = "#861F41"}
+            onBlur={e => e.currentTarget.style.borderBottomColor = c.divider}
+          />
+        </div>
+      </header>
+
+      {/* ── BODY ──────────────────────────────────────────────────────────────── */}
+      <div style={{
+        maxWidth: 1280, margin: "0 auto",
+        padding: "40px 64px 96px", boxSizing: "border-box",
+        display: "grid",
+        gridTemplateColumns: showFilters ? "220px 1fr" : "1fr",
+        gap: 56, alignItems: "start",
+      }}>
+
+        {/* Filter sidebar */}
+        {showFilters && (
+          <FilterPanel filters={filters} setFilters={setFilters} darkMode={dm} subjects={subjects} />
+        )}
+
+        {/* Main content */}
+        <div style={{ minWidth: 0 }}>
+
+          {/* Toolbar */}
+          <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            paddingBottom: 18, marginBottom: 24,
+            borderBottom: `1px solid ${c.divider}`,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+              <button onClick={() => setShowFilters(!showFilters)} style={{
+                background: "none", border: "none", padding: 0, cursor: "pointer",
+                color: c.faint, fontWeight: 700, fontSize: 11,
+                letterSpacing: "1.2px", textTransform: "uppercase",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                transition: "color 0.15s ease",
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = c.text}
+              onMouseLeave={e => e.currentTarget.style.color = c.faint}
+              >
+                {showFilters ? "Hide" : "Show"} filters
+                {activeFilters > 0 && <span style={{ marginLeft: 6, color: "#861F41" }}>· {activeFilters}</span>}
+              </button>
+              <span style={{
+                fontSize: 11, fontWeight: 700, color: c.faint,
+                letterSpacing: "1.2px", textTransform: "uppercase",
+              }}>{filtered.length} results</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <span style={{
+                fontSize: 10, fontWeight: 800, color: c.faint,
+                letterSpacing: "1.5px", textTransform: "uppercase",
+              }}>Sort</span>
+              <SortBtn value="subject" label="Subject" />
+              <SortBtn value="gpa" label="Avg GPA" />
+              <SortBtn value="title" label="Title" />
+            </div>
+          </div>
+
+          {/* Course grid */}
+          {loading ? (
+            <div style={{
+              padding: "120px 0", textAlign: "center",
+              fontSize: 11, fontWeight: 700, color: c.faint,
+              letterSpacing: "2px", textTransform: "uppercase",
+            }}>Loading the catalog…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: "120px 0", textAlign: "center" }}>
+              <div style={{
+                fontSize: 11, fontWeight: 800, color: "#861F41",
+                letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14,
+              }}>No matches</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: c.text, marginBottom: 6, letterSpacing: "-0.3px" }}>
+                Nothing fits those filters.
+              </div>
+              <div style={{ fontSize: 14, color: c.sub, fontWeight: 500 }}>Try loosening a constraint or clearing the search.</div>
+            </div>
+          ) : (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 14,
+            }}>
+              {filtered.map(course => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  darkMode={dm}
+                  onClick={onCourseClick}
+                  onProfClick={onProfClick}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { CourseSearch, CourseCard, CourseDetail, GradeGrid, GpaBadge, SeatsBadge, RmpMini, FilterPanel });
