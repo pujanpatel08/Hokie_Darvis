@@ -324,12 +324,12 @@ function ChatbotPage({ darkMode }) {
       const data = await res.json();
       setMessages(prev => [...prev, { role: "bot", ...data }]);
     } catch (err) {
-      const isNetwork = err.message.includes("fetch") || err.message.includes("Failed");
+      const isNetwork = err.message.includes("fetch") || err.message.includes("Failed") || err.message.includes("NetworkError");
       setServerDown(isNetwork);
       setMessages(prev => [...prev, {
         role: "bot",
         answer: isNetwork
-          ? "The AI server isn't running. Start it with:\n\ncd ~/Developer/Projects/Hokie_Darvis/chat-bot\nsource .venv/bin/activate\nuvicorn app.main:app --reload"
+          ? "Couldn't reach the AI server. It may be starting up (Render free tier takes ~30 seconds after inactivity) — try again in a moment."
           : `Something went wrong: ${err.message}`,
         tables: [], charts: [], warnings: [],
       }]);
@@ -465,7 +465,7 @@ function ChatbotPage({ darkMode }) {
 
             {serverDown && (
               <span style={{ fontSize: 11, color: "#f87171", fontWeight: 600 }}>
-                ⚠ Server offline — start uvicorn to use the chatbot
+                ⚠ Server unreachable — try again in ~30 seconds
               </span>
             )}
           </div>
