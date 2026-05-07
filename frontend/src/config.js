@@ -5,5 +5,5 @@ window.DARVIS_CONFIG = {
   supabaseUrl: "https://rpmgcurhxrgtzbdixtay.supabase.co",
   supabaseKey: "sb_publishable_uZimzo_tWiqShsDX0_ROOw_HURMMQs1",
   // Point to your local chatbot server, or a deployed URL when hosted
-  chatApiUrl: "http://127.0.0.1:8000/chat",
+  chatApiUrl: "https://chat-bot-6dpo.onrender.com/chat",
 };
