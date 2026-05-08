@@ -282,16 +282,16 @@ function LandingPage({ onEnter, darkMode }) {
 
 
   const stats = [
-    { val: 168,  suffix: '',     label: 'Courses indexed'   },
-    { val: 24,   suffix: ' yrs', label: 'Grade history'     },
-    { val: 4984, suffix: '+',    label: 'Grade records'     },
+    { val: 790,  suffix: '',     label: 'Courses indexed'   },
+    { val: 5,    suffix: ' yrs', label: 'Grade history'     },
+    { val: 3968, suffix: '+',    label: 'Grade records'     },
     { val: 100,  suffix: '%',    label: 'Free to use'       },
   ];
 
   const features = [
     {
       n: '01', title: 'Real grade distributions',
-      desc: 'Every A through F — per professor, per semester, back to 2001. Not estimated. Actual Virginia Tech institutional data.',
+      desc: 'Every A through F — per professor, per semester, back to 2020. Not estimated. Actual Virginia Tech institutional data.',
     },
     {
       n: '02', title: 'RateMyProfessor built in',
