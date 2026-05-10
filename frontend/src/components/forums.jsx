@@ -59,7 +59,7 @@ function ForumsPage({ darkMode = true, setPage }) {
     { title: "CS 3114 with Shaffer vs Lohm — grade outcomes match the vibe?", category: "Course Reviews", time: "2h ago", replies: 7 },
     { title: "Is MATH 2114 worth taking over the summer for credit?", category: "Schedule Planning", time: "5h ago", replies: 12 },
     { title: "ECE 2574 Data Structures — anyone have tips for the labs?", category: "Study Tips & Resources", time: "8h ago", replies: 4 },
-    { title: "How accurate is the AI Chat for predicting my GPA impact?", category: "Site Feedback", time: "1d ago", replies: 9 },
+    { title: "How accurate is Darvis for predicting my GPA impact?", category: "Site Feedback", time: "1d ago", replies: 9 },
     { title: "BIOL 1005 vs BIOL 1006 — which has better grade outcomes?", category: "Course Reviews", time: "1d ago", replies: 15 },
   ];
 
@@ -181,13 +181,13 @@ function ForumsPage({ darkMode = true, setPage }) {
             ))}
           </div>
 
-          {/* AI Chat CTA */}
+          {/* Darvis CTA */}
           <div style={{ marginTop: 24, background: ctaBg, border: `1px solid ${ctaBor}`, borderRadius: 12, padding: "18px 20px" }}>
             <div style={{ fontWeight: 700, fontSize: 14, color: head, marginBottom: 6 }}>
               Looking for grade data?
             </div>
             <div style={{ fontSize: 13, color: subtext, lineHeight: 1.55, marginBottom: 14 }}>
-              The AI Chat can pull historical grade distributions for any VT course or instructor instantly.
+              Darvis can pull historical grade distributions for any VT course or instructor instantly.
             </div>
             <button
               onClick={() => setPage && setPage("chatbot")}
@@ -197,7 +197,7 @@ function ForumsPage({ darkMode = true, setPage }) {
                 cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}
             >
-              Open AI Chat →
+              Open Darvis →
             </button>
           </div>
         </div>

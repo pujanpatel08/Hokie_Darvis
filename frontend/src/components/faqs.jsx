@@ -24,7 +24,7 @@ function FaqsPage({ darkMode = true, setPage }) {
       items: [
         {
           q: "What is HokieDarvis?",
-          a: "HokieDarvis is a course-planning tool built for Virginia Tech students. It lets you explore historical grade distributions for any VT course or instructor, build your semester schedule, and ask the AI Chat questions about grade outcomes — all in one place.",
+          a: "HokieDarvis is a course-planning tool built for Virginia Tech students. It lets you explore historical grade distributions for any VT course or instructor, build your semester schedule, and ask Darvis questions about grade outcomes — all in one place.",
         },
         {
           q: "Where does the grade data come from?",
@@ -62,23 +62,23 @@ function FaqsPage({ darkMode = true, setPage }) {
       ],
     },
     {
-      heading: "AI Chat",
+      heading: "Darvis",
       items: [
         {
-          q: "What can the AI Chat actually do?",
-          a: "The AI Chat can answer questions about grade distributions: which instructor for a specific course has stronger historical grade outcomes, how a course's A rate has trended over recent semesters, which sections have higher F or withdrawal rates, and similar quantitative questions based on the grade data.",
+          q: "What can Darvis actually do?",
+          a: "Darvis can answer questions about grade distributions: which instructor for a specific course has stronger historical grade outcomes, how a course's A rate has trended over recent semesters, which sections have higher F or withdrawal rates, and similar quantitative questions based on the grade data.",
         },
         {
-          q: "Why can't the AI Chat tell me about workload or teaching style?",
-          a: "The AI only has access to grade distribution numbers — it has no information about teaching style, exam difficulty, workload, attendance policies, or student reviews. For those, check the Forums page or Rate My Professor.",
+          q: "Why can't Darvis tell me about workload or teaching style?",
+          a: "Darvis only has access to grade distribution numbers — it has no information about teaching style, exam difficulty, workload, attendance policies, or student reviews. For those, check the Forums page or Rate My Professor.",
         },
         {
-          q: "The AI gave me an answer with numbers — how reliable is it?",
+          q: "Darvis gave me an answer with numbers — how reliable is it?",
           a: "The AI pulls from the actual grade records in the database. If a course has a small number of students or only one or two semesters of data, the AI will say so. Treat answers for thin data sets with caution.",
         },
         {
-          q: "Why does the AI sometimes say it can't answer?",
-          a: "If a question is outside what grade data can answer (for example, 'Is this professor nice?' or 'Is the homework hard?'), the AI will say so and suggest a question it can answer instead. It won't make up information.",
+          q: "Why does Darvis sometimes say it can't answer?",
+          a: "If a question is outside what grade data can answer (for example, 'Is this professor nice?' or 'Is the homework hard?'), Darvis will say so and suggest a question it can answer instead. It won't make up information.",
         },
       ],
     },
@@ -118,7 +118,7 @@ function FaqsPage({ darkMode = true, setPage }) {
         <div style={{ maxWidth: 820, margin: "0 auto", padding: "0 48px" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.5px", color: head }}>FAQs</h1>
           <p style={{ margin: "10px 0 0", color: subtext, fontSize: 15 }}>
-            Common questions about HokieDarvis, the grade data, and the AI Chat.
+            Common questions about HokieDarvis, the grade data, and Darvis.
           </p>
         </div>
       </div>
@@ -191,7 +191,7 @@ function FaqsPage({ darkMode = true, setPage }) {
               fontFamily: "'Plus Jakarta Sans', sans-serif",
             }}
           >
-            Open AI Chat
+            Open Darvis
           </button>
           <button
             onClick={() => setPage && setPage("forums")}

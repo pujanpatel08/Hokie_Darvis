@@ -28,7 +28,7 @@ function Nav({ page, setPage, schedule, darkMode = true, setDarkMode }) {
   const navLinks = [
     { id: "search",   label: "Browse Courses" },
     { id: "schedule", label: "Schedule Builder" },
-    { id: "chatbot",  label: "AI Chat" },
+    { id: "chatbot",  label: "Darvis" },
     { id: "forums",   label: "Forums" },
     { id: "faqs",     label: "FAQs" },
   ];
