@@ -2,15 +2,20 @@
 const { useState } = React;
 
 function FaqsPage({ darkMode = true, setPage }) {
-  const bg      = "#080808";
-  const cardBg  = "rgba(255,255,255,0.04)";
-  const border  = "rgba(255,255,255,0.08)";
-  const text    = "rgba(255,255,255,0.88)";
-  const subtext = "rgba(255,255,255,0.45)";
+  const bg      = darkMode ? "#080808"                 : "#f7f4f0";
+  const cardBg  = darkMode ? "rgba(255,255,255,0.04)"  : "rgba(0,0,0,0.03)";
+  const cardHov = darkMode ? "rgba(255,255,255,0.03)"  : "rgba(0,0,0,0.02)";
+  const border  = darkMode ? "rgba(255,255,255,0.08)"  : "rgba(0,0,0,0.08)";
+  const borOpen = darkMode ? "rgba(255,255,255,0.14)"  : "rgba(0,0,0,0.14)";
+  const text    = darkMode ? "rgba(255,255,255,0.88)"  : "#1a1210";
+  const subtext = darkMode ? "rgba(255,255,255,0.45)"  : "rgba(0,0,0,0.45)";
+  const head    = darkMode ? "#ffffff"                 : "#1a1210";
   const accent  = "#861F41";
+  const btnSec  = darkMode ? "rgba(255,255,255,0.07)"  : "rgba(0,0,0,0.06)";
+  const btnSecH = darkMode ? "rgba(255,255,255,0.11)"  : "rgba(0,0,0,0.1)";
+  const plusBg  = darkMode ? "rgba(255,255,255,0.08)"  : "rgba(0,0,0,0.08)";
 
   const [open, setOpen] = useState(null);
-
   const toggle = i => setOpen(open === i ? null : i);
 
   const sections = [
@@ -106,12 +111,12 @@ function FaqsPage({ darkMode = true, setPage }) {
   ];
 
   return (
-    <div style={{ background: bg, minHeight: "100vh", color: text, fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 80 }}>
+    <div style={{ background: bg, minHeight: "100vh", color: text, fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 80, transition: "background 0.3s, color 0.3s" }}>
 
       {/* Header */}
       <div style={{ borderBottom: `1px solid ${border}`, padding: "48px 0 40px" }}>
         <div style={{ maxWidth: 820, margin: "0 auto", padding: "0 48px" }}>
-          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.5px" }}>FAQs</h1>
+          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.5px", color: head }}>FAQs</h1>
           <p style={{ margin: "10px 0 0", color: subtext, fontSize: 15 }}>
             Common questions about HokieDarvis, the grade data, and the AI Chat.
           </p>
@@ -133,7 +138,8 @@ function FaqsPage({ darkMode = true, setPage }) {
                   <div
                     key={ii}
                     style={{
-                      background: cardBg, border: `1px solid ${isOpen ? "rgba(255,255,255,0.14)" : border}`,
+                      background: cardBg,
+                      border: `1px solid ${isOpen ? borOpen : border}`,
                       borderRadius: 12, overflow: "hidden",
                       transition: "border-color 0.15s",
                     }}
@@ -141,23 +147,24 @@ function FaqsPage({ darkMode = true, setPage }) {
                     <button
                       onClick={() => toggle(key)}
                       style={{
-                        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-                        gap: 16, padding: "16px 20px", background: "none", border: "none",
-                        cursor: "pointer", textAlign: "left",
+                        width: "100%", display: "flex", alignItems: "center",
+                        justifyContent: "space-between", gap: 16, padding: "16px 20px",
+                        background: "none", border: "none", cursor: "pointer", textAlign: "left",
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+                      onMouseEnter={e => e.currentTarget.style.background = cardHov}
                       onMouseLeave={e => e.currentTarget.style.background = "none"}
                     >
-                      <span style={{ fontSize: 14, fontWeight: 600, color: isOpen ? "white" : text, lineHeight: 1.45 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: isOpen ? head : text, lineHeight: 1.45 }}>
                         {item.q}
                       </span>
                       <span style={{
                         flexShrink: 0, width: 22, height: 22, borderRadius: "50%",
-                        background: isOpen ? accent : "rgba(255,255,255,0.08)",
+                        background: isOpen ? accent : plusBg,
                         display: "flex", alignItems: "center", justifyContent: "center",
                         fontSize: 14, color: isOpen ? "white" : subtext,
                         transition: "background 0.15s, transform 0.2s",
                         transform: isOpen ? "rotate(45deg)" : "none",
+                        fontWeight: 500,
                       }}>
                         +
                       </span>
@@ -189,12 +196,13 @@ function FaqsPage({ darkMode = true, setPage }) {
           <button
             onClick={() => setPage && setPage("forums")}
             style={{
-              background: "rgba(255,255,255,0.07)", color: text, border: `1px solid ${border}`,
-              borderRadius: 9, padding: "10px 20px", fontWeight: 600, fontSize: 14, cursor: "pointer",
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              background: btnSec, color: text, border: `1px solid ${border}`,
+              borderRadius: 9, padding: "10px 20px", fontWeight: 600, fontSize: 14,
+              cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
+              transition: "background 0.15s",
             }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.11)"}
-            onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
+            onMouseEnter={e => e.currentTarget.style.background = btnSecH}
+            onMouseLeave={e => e.currentTarget.style.background = btnSec}
           >
             Go to Forums
           </button>

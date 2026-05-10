@@ -81,7 +81,7 @@ function App() {
   };
 
   return (
-    <div style={{ background: "#080808", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ background: darkMode ? "#080808" : "#f7f4f0", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif", transition: "background 0.3s" }}>
       <Nav page={page} setPage={setPage} schedule={schedule} darkMode={darkMode} setDarkMode={setDarkMode} />
 
       {renderPage()}
