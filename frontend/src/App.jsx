@@ -46,6 +46,12 @@ function App() {
     if (page === "chatbot") {
       return <ChatbotPage darkMode={darkMode} />;
     }
+    if (page === "forums") {
+      return <ForumsPage darkMode={darkMode} setPage={setPage} />;
+    }
+    if (page === "faqs") {
+      return <FaqsPage darkMode={darkMode} setPage={setPage} />;
+    }
     if (page === "professor" && selectedProf) {
       return (
         <ProfessorProfile

@@ -28,7 +28,9 @@ function Nav({ page, setPage, schedule, darkMode = true, setDarkMode }) {
   const navLinks = [
     { id: "search",   label: "Browse Courses" },
     { id: "schedule", label: "Schedule Builder" },
-    { id: "chatbot",  label: "AI Chat", soon: true },
+    { id: "chatbot",  label: "AI Chat" },
+    { id: "forums",   label: "Forums" },
+    { id: "faqs",     label: "FAQs" },
   ];
 
   // Nav adapts: on landing page the campus image is behind it, elsewhere App bg applies
