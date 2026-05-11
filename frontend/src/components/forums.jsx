@@ -1,7 +1,7 @@
 // Forums page — community discussion hub
-const { useState } = React;
+import { useState } from "react";
 
-function ForumsPage({ darkMode = true, setPage }) {
+export default function ForumsPage({ darkMode = true, setPage }) {
   const bg      = darkMode ? "#080808"                    : "#f7f4f0";
   const cardBg  = darkMode ? "rgba(255,255,255,0.04)"     : "rgba(0,0,0,0.03)";
   const cardHov = darkMode ? "rgba(255,255,255,0.07)"     : "rgba(0,0,0,0.06)";
@@ -206,5 +206,3 @@ function ForumsPage({ darkMode = true, setPage }) {
     </div>
   );
 }
-
-Object.assign(window, { ForumsPage });

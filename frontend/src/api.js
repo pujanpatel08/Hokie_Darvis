@@ -1,8 +1,9 @@
 // src/api.js
 // Query functions for the Darvis frontend.
 // All functions return data in the shape the existing components expect.
+import { db } from "./supabase.js";
 
-window.API = {
+export const API = {
 
   // Returns courses matching the given filters.
   // Filtering happens server-side in Supabase — fast even with a large table.
@@ -14,7 +15,7 @@ window.API = {
     let offset  = 0;
 
     while (true) {
-      let query = window.darvisDb.from('courses').select('*');
+      let query = db.from('courses').select('*');
 
       if (subjects && subjects.length) {
         query = query.in('subject', subjects);
@@ -70,7 +71,7 @@ window.API = {
 
   // Returns the distinct subject codes present in the courses table.
   async getSubjects() {
-    const { data, error } = await window.darvisDb
+    const { data, error } = await db
       .from('courses')
       .select('subject')
       .order('subject');
@@ -81,13 +82,13 @@ window.API = {
   // Returns a single course by subject + course_number, plus its raw grade rows.
   async getCourse(subject, number) {
     const [courseRes, gradesRes] = await Promise.all([
-      window.darvisDb
+      db
         .from('courses')
         .select('*')
         .eq('subject', subject.toUpperCase())
         .eq('course_number', number)
         .single(),
-      window.darvisDb
+      db
         .from('grades')
         .select('*')
         .eq('subject', subject.toUpperCase())

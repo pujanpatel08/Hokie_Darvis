@@ -1,5 +1,6 @@
 // Schedule Builder component
-const { useState, useMemo } = React;
+import { useState, useMemo } from "react";
+import { MOCK } from "../mock-data.js";
 
 const DAYS = ["Mon","Tue","Wed","Thu","Fri"];
 const DAY_MAP = { "M":"Mon","T":"Tue","W":"Wed","R":"Thu","F":"Fri" };
@@ -30,7 +31,7 @@ function minsToPct(mins) {
   return (mins / TOTAL_MINS) * 100;
 }
 
-function formatTime(t) { return window.MOCK.formatTime(t); }
+function formatTime(t) { return MOCK.formatTime(t); }
 
 function hasConflict(sections) {
   for (let i = 0; i < sections.length; i++) {
@@ -131,7 +132,7 @@ function ScheduleGrid({ sections, colorMap, darkMode, onRemove, onCourseClick })
               const endMins = timeToMins(sec.endTime) - START_HOUR * 60;
               const top = (startMins / (TOTAL_MINS)) * gridHeight;
               const height = Math.max(((endMins - startMins) / TOTAL_MINS) * gridHeight, 24);
-              const course = window.MOCK.getCourse(sec.courseId);
+              const course = MOCK.getCourse(sec.courseId);
               const colIdx = colorMap[sec.courseId] || 0;
               const col = COURSE_COLORS[colIdx % COURSE_COLORS.length];
               return (
@@ -177,7 +178,7 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove, onCourseClick, o
     sub: "rgba(255,255,255,0.38)",
   };
   const totalCredits = sections.reduce((s, sec) => {
-    const c = window.MOCK.getCourse(sec.courseId);
+    const c = MOCK.getCourse(sec.courseId);
     return s + (c ? c.credits : 0);
   }, 0);
 
@@ -193,8 +194,8 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove, onCourseClick, o
       </div>
 
       {sections.map(sec => {
-        const course = window.MOCK.getCourse(sec.courseId);
-        const prof = window.MOCK.getProf(sec.profId);
+        const course = MOCK.getCourse(sec.courseId);
+        const prof = MOCK.getProf(sec.profId);
         const colIdx = colorMap[sec.courseId] || 0;
         const col = COURSE_COLORS[colIdx % COURSE_COLORS.length];
         return (
@@ -255,7 +256,7 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
     border: "rgba(255,255,255,0.08)",
   };
 
-  const sections = schedule.map(id => window.MOCK.sections.find(s => s.id === id)).filter(Boolean);
+  const sections = schedule.map(id => MOCK.sections.find(s => s.id === id)).filter(Boolean);
   const courseIds = [...new Set(sections.map(s => s.courseId))];
   const colorMap = {};
   courseIds.forEach((id, i) => colorMap[id] = i);
@@ -328,4 +329,4 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
   );
 }
 
-Object.assign(window, { ScheduleBuilder });
+export default ScheduleBuilder;

@@ -1,8 +1,8 @@
 // Nav component — dark minimal
-const { useState } = React;
+import { useState } from "react";
 
-// StarRating stays here since courses.jsx uses it
-function StarRating({ rating, max = 5, size = 14 }) {
+// StarRating stays here since courses.jsx and dashboard-prof.jsx import it
+export function StarRating({ rating, max = 5, size = 14 }) {
   return (
     <span style={{ display: "inline-flex", gap: 1, alignItems: "center" }}>
       {Array.from({ length: max }).map((_, i) => {
@@ -24,7 +24,7 @@ function StarRating({ rating, max = 5, size = 14 }) {
   );
 }
 
-function Nav({ page, setPage, schedule, darkMode = true, setDarkMode }) {
+export default function Nav({ page, setPage, schedule, darkMode = true, setDarkMode }) {
   const navLinks = [
     { id: "search",   label: "Browse Courses" },
     { id: "schedule", label: "Schedule Builder" },
@@ -173,8 +173,6 @@ function Nav({ page, setPage, schedule, darkMode = true, setDarkMode }) {
 }
 
 // AuthModal kept for compatibility but not used in the main flow
-function AuthModal({ onClose }) {
+export function AuthModal({ onClose }) {
   return null;
 }
-
-Object.assign(window, { Nav, AuthModal, StarRating });

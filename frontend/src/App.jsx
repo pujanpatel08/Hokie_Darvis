@@ -1,8 +1,15 @@
 // Main App component
-const { useState, useEffect } = React;
+import { useState, useEffect } from "react";
+import Nav from "./components/nav-auth.jsx";
+import LandingPage from "./components/landing.jsx";
+import CourseSearch, { CourseDetail } from "./components/courses.jsx";
+import ScheduleBuilder from "./components/schedule.jsx";
+import ChatbotPage from "./components/chatbot.jsx";
+import ForumsPage from "./components/forums.jsx";
+import FaqsPage from "./components/faqs.jsx";
+import ProfessorProfile from "./components/dashboard-prof.jsx";
 
-
-function App() {
+export default function App() {
   const [page, setPage] = useState("landing");
   const [darkMode, setDarkMode] = useState(() => {
     try { return localStorage.getItem("hokieDarvis_theme") !== "light"; } catch { return true; }
@@ -98,5 +105,3 @@ function App() {
     </div>
   );
 }
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);

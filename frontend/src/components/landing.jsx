@@ -1,5 +1,5 @@
 // Landing Page v4 — VT Campus panorama · scroll-pan · light/dark
-const { useState, useEffect, useRef } = React;
+import { useState, useEffect, useRef } from "react";
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const LP_CSS = `
@@ -66,7 +66,7 @@ function injectStyles(id, css) {
 // Both photos and both overlays are always mounted; opacity crossfades on
 // darkMode. Used by the landing page AND any other page that wants the same
 // backdrop (e.g. Browse Courses).
-function CampusBackground({ darkMode }) {
+export function CampusBackground({ darkMode }) {
   // Make sure the global theme-transition CSS is present even if the landing
   // page hasn't rendered yet (e.g. user lands directly on Browse Courses).
   injectStyles('lp-v4', LP_CSS);
@@ -250,7 +250,7 @@ function GradeShowcase({ darkMode }) {
 
 
 // ── Main landing page ─────────────────────────────────────────────────────────
-function LandingPage({ onEnter, darkMode }) {
+export default function LandingPage({ onEnter, darkMode }) {
   const statsRef  = useRef(null);
   const heroBgRef = useRef(null);
   const [statsActive, setStatsActive] = useState(false);
@@ -641,4 +641,3 @@ function LandingPage({ onEnter, darkMode }) {
   );
 }
 
-Object.assign(window, { LandingPage, CampusBackground });

@@ -1,7 +1,11 @@
 // Chatbot page — full AI chat experience powered by the FastAPI backend
-const { useState, useEffect, useRef, useCallback } = React;
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Chart, registerables } from "chart.js";
+import { DARVIS_CONFIG } from "../config.js";
 
-const CHAT_API = window.DARVIS_CONFIG?.chatApiUrl || "http://127.0.0.1:8000/chat";
+Chart.register(...registerables);
+
+const CHAT_API = DARVIS_CONFIG.chatApiUrl;
 
 const SUGGESTED = [
   "Which CS 3114 professor has the strongest grade outcomes?",
@@ -50,7 +54,7 @@ function ChartWidget({ spec, darkMode }) {
   const chartRef  = useRef(null);
 
   useEffect(() => {
-    if (!canvasRef.current || !spec?.data?.length || typeof Chart === "undefined") return;
+    if (!canvasRef.current || !spec?.data?.length) return;
     if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
 
     const ctx = canvasRef.current.getContext("2d");
@@ -293,7 +297,7 @@ function BotMessage({ msg, darkMode }) {
 }
 
 // ── Main chatbot page ─────────────────────────────────────────────
-function ChatbotPage({ darkMode }) {
+export default function ChatbotPage({ darkMode }) {
   const [messages,    setMessages]    = useState([]);
   const [input,       setInput]       = useState("");
   const [loading,     setLoading]     = useState(false);

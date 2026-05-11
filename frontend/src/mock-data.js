@@ -1,5 +1,5 @@
 // HokieDarvis Mock Data
-window.MOCK = {
+export const MOCK = {
   currentUser: null,
 
   professors: [
@@ -184,7 +184,7 @@ window.MOCK = {
 
   // Saved schedule for demo logged-in user
   demoSchedule: ["s2","s10","s14","s16","s17"],
-  // s2: CS 2114 T/R 11:00, s10: MATH 2114 T/R 9:30, s14: PHYS 2305 MWF 11:15, s16: BIOL 2104 T/R 11:00 - conflict! 
+  // s2: CS 2114 T/R 11:00, s10: MATH 2114 T/R 9:30, s14: PHYS 2305 MWF 11:15, s16: BIOL 2104 T/R 11:00 - conflict!
   // Let's fix: use s2 CS2114 T/R 11, s11 MATH 2114 MWF 1pm, s15 PHYS T/R 12:30, s17 HIST T/R 2pm, s18 PSYC MWF 10:10
   demoSchedule2: ["s2","s11","s15","s17","s18"],
 
@@ -207,30 +207,30 @@ window.MOCK = {
 };
 
 // Helper functions
-window.MOCK.getCourse = (id) => window.MOCK.courses.find(c => c.id === id);
-window.MOCK.getProf = (id) => window.MOCK.professors.find(p => p.id === id);
-window.MOCK.getSections = (courseId) => window.MOCK.sections.filter(s => s.courseId === courseId);
-window.MOCK.getProfSections = (profId) => window.MOCK.sections.filter(s => s.profId === profId);
-window.MOCK.getProfCourses = (profId) => {
-  const courseIds = [...new Set(window.MOCK.sections.filter(s => s.profId === profId).map(s => s.courseId))];
-  return courseIds.map(id => window.MOCK.getCourse(id)).filter(Boolean);
+MOCK.getCourse = (id) => MOCK.courses.find(c => c.id === id);
+MOCK.getProf = (id) => MOCK.professors.find(p => p.id === id);
+MOCK.getSections = (courseId) => MOCK.sections.filter(s => s.courseId === courseId);
+MOCK.getProfSections = (profId) => MOCK.sections.filter(s => s.profId === profId);
+MOCK.getProfCourses = (profId) => {
+  const courseIds = [...new Set(MOCK.sections.filter(s => s.profId === profId).map(s => s.courseId))];
+  return courseIds.map(id => MOCK.getCourse(id)).filter(Boolean);
 };
 
-window.MOCK.formatTime = (t) => {
+MOCK.formatTime = (t) => {
   const [h, m] = t.split(':').map(Number);
   const ampm = h >= 12 ? 'PM' : 'AM';
   const hr = h > 12 ? h - 12 : h === 0 ? 12 : h;
   return `${hr}:${m.toString().padStart(2,'0')} ${ampm}`;
 };
 
-window.MOCK.gpaColor = (gpa) => {
+MOCK.gpaColor = (gpa) => {
   if (gpa >= 3.5) return '#22843c';
   if (gpa >= 3.0) return '#3a8c44';
   if (gpa >= 2.5) return '#b45309';
   return '#c0392b';
 };
 
-window.MOCK.gradeColors = {
+MOCK.gradeColors = {
   "A":  { bg: "oklch(0.92 0.09 145)", text: "oklch(0.35 0.14 145)" },
   "A-": { bg: "oklch(0.92 0.07 145)", text: "oklch(0.35 0.12 145)" },
   "B+": { bg: "oklch(0.90 0.08 200)", text: "oklch(0.35 0.13 220)" },

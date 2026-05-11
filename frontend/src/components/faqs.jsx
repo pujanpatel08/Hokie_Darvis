@@ -1,7 +1,7 @@
 // FAQs page
-const { useState } = React;
+import { useState } from "react";
 
-function FaqsPage({ darkMode = true, setPage }) {
+export default function FaqsPage({ darkMode = true, setPage }) {
   const bg      = darkMode ? "#080808"                 : "#f7f4f0";
   const cardBg  = darkMode ? "rgba(255,255,255,0.04)"  : "rgba(0,0,0,0.03)";
   const cardHov = darkMode ? "rgba(255,255,255,0.03)"  : "rgba(0,0,0,0.02)";
@@ -211,5 +211,3 @@ function FaqsPage({ darkMode = true, setPage }) {
     </div>
   );
 }
-
-Object.assign(window, { FaqsPage });

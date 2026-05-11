@@ -1,5 +1,8 @@
 // Course Search, Cards, Detail, Grade Grid
-const { useState, useEffect, useRef, useMemo } = React;
+import { useState, useEffect, useRef, useMemo } from "react";
+import { MOCK } from "../mock-data.js";
+import { API } from "../api.js";
+import { StarRating } from "./nav-auth.jsx";
 
 // ── Input sanitization ────────────────────────────────────────────
 // Strips control chars, collapses whitespace, caps at 200 chars.
@@ -13,7 +16,7 @@ function sanitizeQuery(raw) {
 }
 
 // ── GPA Badge ─────────────────────────────────────────────────────
-function GpaBadge({ gpa, large }) {
+export function GpaBadge({ gpa, large }) {
   const color = gpa >= 3.5 ? "#1a7a38" : gpa >= 3.0 ? "#2d7a5a" : gpa >= 2.5 ? "#b45309" : "#c0392b";
   const bg    = gpa >= 3.5 ? "#dcfce7" : gpa >= 3.0 ? "#d1fae5" : gpa >= 2.5 ? "#fef3c7" : "#fee2e2";
   return (
@@ -57,9 +60,9 @@ function RmpMini({ prof, onClick }) {
 }
 
 // ── Grade Distribution Grid ───────────────────────────────────────
-function GradeGrid({ dist, darkMode }) {
+export function GradeGrid({ dist, darkMode }) {
   const grades = ["A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F","W"];
-  const colors = window.MOCK.gradeColors;
+  const colors = MOCK.gradeColors;
   const total = grades.reduce((s, g) => s + (dist[g] || 0), 0);
   if (total === 0) return null;
   return (
@@ -87,7 +90,7 @@ function GradeGrid({ dist, darkMode }) {
 
 // ── Section Row ───────────────────────────────────────────────────
 function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, darkMode }) {
-  const prof = window.MOCK.getProf(section.profId);
+  const prof = MOCK.getProf(section.profId);
   const dm = darkMode;
   const colors = dm
     ? { border: "rgba(255,255,255,0.08)", text: "#f0edf3", sub: "rgba(255,255,255,0.38)" }
@@ -111,8 +114,8 @@ function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, darkMod
         {prof && <div style={{ marginTop: 2 }}><RmpMini prof={prof} onClick={onProfClick} /></div>}
       </div>
       <div style={{ color: colors.text, fontSize: 12 }}>
-        <div style={{ fontWeight: 700 }}>{section.days.join("")} {window.MOCK.formatTime(section.startTime)}</div>
-        <div style={{ color: colors.sub }}>→ {window.MOCK.formatTime(section.endTime)}</div>
+        <div style={{ fontWeight: 700 }}>{section.days.join("")} {MOCK.formatTime(section.startTime)}</div>
+        <div style={{ color: colors.sub }}>→ {MOCK.formatTime(section.endTime)}</div>
       </div>
       <div style={{ color: colors.sub, fontSize: 12 }}>{section.location}</div>
       <div><SeatsBadge seats={section.seats} enrolled={section.enrolled} /></div>
@@ -320,7 +323,7 @@ function SectionBreakdown({ sections, darkMode }) {
 }
 
 // ── Course Detail Modal ───────────────────────────────────────────
-function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onClose, onProfClick }) {
+export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onClose, onProfClick }) {
   const dm = darkMode;
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(true);
@@ -329,13 +332,13 @@ function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onClose, on
   useEffect(() => {
     setDetailLoading(true);
     setDetail(null);
-    window.API.getCourse(course.subject, course.number)
+    API.getCourse(course.subject, course.number)
       .then(d => { setDetail(d); setDetailLoading(false); })
       .catch(() => setDetailLoading(false));
   }, [course.subject, course.number]);
 
-  const sections = window.MOCK.getSections(course.id);
-  const profs = [...new Set(sections.map(s => s.profId))].map(id => window.MOCK.getProf(id)).filter(Boolean);
+  const sections = MOCK.getSections(course.id);
+  const profs = [...new Set(sections.map(s => s.profId))].map(id => MOCK.getProf(id)).filter(Boolean);
   const colors = dm ? {
     bg:      "#0f0f0f",
     surface: "#141414",
@@ -391,7 +394,7 @@ function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onClose, on
           {course.pathways && course.pathways.length > 0 && (
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
               {course.pathways.map(code => {
-                const pw = window.MOCK.pathwaysOptions.find(p => p.code === code);
+                const pw = MOCK.pathwaysOptions.find(p => p.code === code);
                 if (!pw) return null;
                 return (
                   <span key={code} style={{
@@ -497,9 +500,9 @@ function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onClose, on
 // Minimal, magazine-style: hairline border, generous whitespace, eyebrow + heavy title.
 function CourseCard({ course, darkMode, onClick, onProfClick }) {
   const dm = darkMode;
-  const sections = window.MOCK.getSections(course.id);
+  const sections = MOCK.getSections(course.id);
   const profIds = [...new Set(sections.map(s => s.profId))];
-  const profs = profIds.map(id => window.MOCK.getProf(id)).filter(Boolean);
+  const profs = profIds.map(id => MOCK.getProf(id)).filter(Boolean);
   const totalSeats = sections.reduce((s, sec) => s + sec.seats, 0);
   const totalEnrolled = sections.reduce((s, sec) => s + sec.enrolled, 0);
   const seatsLeft = totalSeats - totalEnrolled;
@@ -579,7 +582,7 @@ function CourseCard({ course, darkMode, onClick, onProfClick }) {
           color: c.faint, textTransform: "uppercase",
         }}>
           {course.pathways.map(code => {
-            const pw = window.MOCK.pathwaysOptions.find(p => p.code === code);
+            const pw = MOCK.pathwaysOptions.find(p => p.code === code);
             if (!pw) return null;
             return <span key={code} title={pw.label}>· Concept {code}{pw.suspended ? " ✦" : ""}</span>;
           })}
@@ -798,7 +801,7 @@ function FilterPanel({ filters, setFilters, darkMode, subjects }) {
 
       <S title="Pathways">
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {window.MOCK.pathwaysOptions.filter(pw => !pw.suspended).map(pw => {
+          {MOCK.pathwaysOptions.filter(pw => !pw.suspended).map(pw => {
             const active = filters.pathway === pw.code;
             return (
               <button
@@ -855,7 +858,7 @@ function FilterPanel({ filters, setFilters, darkMode, subjects }) {
 // ── Course Search Page ────────────────────────────────────────────
 const PAGE_SIZE = 24;
 
-function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
+export default function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ subjects: [], minGpa: "", maxDiff: "", minCredits: "", maxCredits: "", pathway: "", days: [] });
   const [sort, setSort] = useState("subject");
@@ -870,7 +873,7 @@ function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
 
   // Load subject list once on mount
   useEffect(() => {
-    window.API.getSubjects().then(setSubjects).catch(console.error);
+    API.getSubjects().then(setSubjects).catch(console.error);
   }, []);
 
   // Fetch courses from Supabase whenever query or filterable fields change (300ms debounce)
@@ -879,7 +882,7 @@ function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
     debounceRef.current = setTimeout(() => {
       setLoading(true);
       setPage(1);
-      window.API.getCourses({
+      API.getCourses({
         q: query,
         subjects: filters.subjects,
         minGpa: filters.minGpa,
@@ -1159,4 +1162,3 @@ function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
   );
 }
 
-Object.assign(window, { CourseSearch, CourseCard, CourseDetail, GradeGrid, GpaBadge, SeatsBadge, RmpMini, FilterPanel });

@@ -1,5 +1,8 @@
 // Dashboard + Professor Profile components
-const { useState } = React;
+import { useState } from "react";
+import { MOCK } from "../mock-data.js";
+import { StarRating } from "./nav-auth.jsx";
+import { GpaBadge, GradeGrid } from "./courses.jsx";
 
 const COURSE_COLORS = [
   { bg:"#fde8ee", border:"#861F41", text:"#861F41" },
@@ -39,13 +42,13 @@ function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRem
     card: dm ? "#221e27" : "white",
   };
 
-  const sections = schedule.map(id => window.MOCK.sections.find(s => s.id === id)).filter(Boolean);
+  const sections = schedule.map(id => MOCK.sections.find(s => s.id === id)).filter(Boolean);
   const courseIds = [...new Set(sections.map(s => s.courseId))];
   const totalCredits = courseIds.reduce((s, id) => {
-    const c = window.MOCK.getCourse(id); return s + (c ? c.credits : 0);
+    const c = MOCK.getCourse(id); return s + (c ? c.credits : 0);
   }, 0);
   const avgGpa = courseIds.length
-    ? (courseIds.reduce((s, id) => { const c = window.MOCK.getCourse(id); return s + (c ? c.avgGpa : 0); }, 0) / courseIds.length).toFixed(2)
+    ? (courseIds.reduce((s, id) => { const c = MOCK.getCourse(id); return s + (c ? c.avgGpa : 0); }, 0) / courseIds.length).toFixed(2)
     : "—";
 
   const colorMap = {};
@@ -113,8 +116,8 @@ function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRem
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {sections.map(sec => {
-                  const course = window.MOCK.getCourse(sec.courseId);
-                  const prof = window.MOCK.getProf(sec.profId);
+                  const course = MOCK.getCourse(sec.courseId);
+                  const prof = MOCK.getProf(sec.profId);
                   const colIdx = colorMap[sec.courseId] || 0;
                   const col = COURSE_COLORS[colIdx % COURSE_COLORS.length];
                   return (
@@ -139,7 +142,7 @@ function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRem
                             fontFamily: "'Plus Jakarta Sans', sans-serif",
                           }}>{course?.title}</button>
                           <div style={{ display: "flex", gap: 12, marginTop: 5, fontSize: 13, color: colors.sub, flexWrap: "wrap" }}>
-                            <span>🕐 {sec.days.join("")} {window.MOCK.formatTime(sec.startTime)}</span>
+                            <span>🕐 {sec.days.join("")} {MOCK.formatTime(sec.startTime)}</span>
                             <span>📍 {sec.location}</span>
                             <span style={{ fontFamily: "monospace" }}>CRN {sec.crn}</span>
                             {prof && (
@@ -212,7 +215,7 @@ function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRem
 }
 
 // ── Professor Profile ─────────────────────────────────────────────
-function ProfessorProfile({ prof, darkMode, onCourseClick, onBack }) {
+export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack }) {
   const dm = darkMode;
   const colors = {
     bg: dm ? "#16131a" : "#f8f7f5",
@@ -222,8 +225,8 @@ function ProfessorProfile({ prof, darkMode, onCourseClick, onBack }) {
     card: dm ? "#221e27" : "white",
   };
 
-  const courses = window.MOCK.getProfCourses(prof.id);
-  const sections = window.MOCK.getProfSections(prof.id);
+  const courses = MOCK.getProfCourses(prof.id);
+  const sections = MOCK.getProfSections(prof.id);
 
   // Fake reviews
   const reviews = [
@@ -403,4 +406,3 @@ function ProfessorProfile({ prof, darkMode, onCourseClick, onBack }) {
   );
 }
 
-Object.assign(window, { Dashboard, ProfessorProfile, StatCard });
