@@ -1,6 +1,17 @@
 // Course Search, Cards, Detail, Grade Grid
 const { useState, useEffect, useRef, useMemo } = React;
 
+// ── Input sanitization ────────────────────────────────────────────
+// Strips control chars, collapses whitespace, caps at 200 chars.
+// Used on all text inputs across this page.
+function sanitizeQuery(raw) {
+  if (!raw) return "";
+  let s = raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  s = s.replace(/[ \t]+/g, " ");
+  if (s.length > 200) s = s.slice(0, 200);
+  return s;
+}
+
 // ── GPA Badge ─────────────────────────────────────────────────────
 function GpaBadge({ gpa, large }) {
   const color = gpa >= 3.5 ? "#1a7a38" : gpa >= 3.0 ? "#2d7a5a" : gpa >= 2.5 ? "#b45309" : "#c0392b";
@@ -654,7 +665,7 @@ function SubjectSearch({ subjects, selected, onChange, darkMode, c }) {
       <input
         ref={inputRef}
         value={query}
-        onChange={e => { setQuery(e.target.value); setOpen(true); }}
+        onChange={e => { setQuery(sanitizeQuery(e.target.value)); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder={selected.length ? "Add another…" : "Search subjects…"}
         style={{
@@ -972,7 +983,7 @@ function CourseSearch({ darkMode, schedule, onCourseClick, onProfClick }) {
         <div style={{ position: "relative", maxWidth: 560 }}>
           <input
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={e => setQuery(sanitizeQuery(e.target.value))}
             placeholder="Search course name, number, or subject"
             style={{
               width: "100%", padding: "14px 16px 14px 0",

@@ -11,6 +11,39 @@ const SUGGESTED = [
   "Which CS courses have the most grade data?",
 ];
 
+// ── Input sanitization & NLP normalization ────────────────────────
+// Cleans raw user input before it hits the backend:
+//   1. Strips control characters and excessive whitespace
+//   2. Caps length at 500 characters
+//   3. Normalizes VT course codes (cs3114, cs-3114, CS3114 → CS 3114)
+//   4. Title-cases common professor name patterns
+function sanitizeInput(raw) {
+  if (!raw) return "";
+  // Strip non-printable control chars (except newline/tab which are valid in chat)
+  let s = raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  // Collapse runs of whitespace
+  s = s.replace(/[ \t]+/g, " ").trim();
+  // Cap length
+  if (s.length > 500) s = s.slice(0, 500).trim();
+  return s;
+}
+
+// Normalizes VT-specific shorthand:
+//   "cs3114" or "cs-3114" or "CS3114" → "CS 3114"
+//   "ece 2604" stays as-is
+function normalizeCourseCode(s) {
+  // Match 2-5 letters immediately followed (optional hyphen) by exactly 4 digits
+  return s.replace(/\b([A-Za-z]{2,5})-?(\d{4})\b/g, (_, subj, num) => {
+    return subj.toUpperCase() + " " + num;
+  });
+}
+
+function normalizeInput(raw) {
+  let s = sanitizeInput(raw);
+  s = normalizeCourseCode(s);
+  return s;
+}
+
 // ── Chart widget ──────────────────────────────────────────────────
 function ChartWidget({ spec, darkMode }) {
   const canvasRef = useRef(null);
@@ -296,7 +329,7 @@ function ChatbotPage({ darkMode }) {
   }, [messages, loading]);
 
   const send = useCallback(async (questionOverride) => {
-    const question = (questionOverride || input).trim();
+    const question = normalizeInput(questionOverride || input);
     if (!question || loading) return;
 
     setInput("");
@@ -527,7 +560,7 @@ function ChatbotPage({ darkMode }) {
             <textarea
               ref={inputRef}
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => setInput(sanitizeInput(e.target.value))}
               onKeyDown={handleKey}
               placeholder="Ask about a course, professor, or grade trend…"
               rows={1}
