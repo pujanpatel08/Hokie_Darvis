@@ -4,7 +4,7 @@ const { useState, useEffect, useRef, useCallback } = React;
 const CHAT_API = window.DARVIS_CONFIG?.chatApiUrl || "http://127.0.0.1:8000/chat";
 
 const SUGGESTED = [
-  "Who is the best professor for CS 3114?",
+  "Which CS 3114 professor has the strongest grade outcomes?",
   "Show me CS electives with the highest GPA",
   "What 2000-level courses have the lowest F rate?",
   "Professor profile for Shaffer",
@@ -304,6 +304,9 @@ function ChatbotPage({ darkMode }) {
     setMessages(prev => [...prev, { role: "user", content: question }]);
     setLoading(true);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 50000);
+
     try {
       const res = await fetch(CHAT_API, {
         method: "POST",
@@ -314,22 +317,28 @@ function ChatbotPage({ darkMode }) {
           min_students: minStudents,
           top_n: topN,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `HTTP ${res.status}`);
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || `HTTP ${res.status}`);
       }
 
       const data = await res.json();
       setMessages(prev => [...prev, { role: "bot", ...data }]);
     } catch (err) {
-      const isNetwork = err.message.includes("fetch") || err.message.includes("Failed") || err.message.includes("NetworkError");
+      clearTimeout(timeoutId);
+      const isTimeout = err.name === "AbortError";
+      const isNetwork = isTimeout || err.message === "Failed to fetch";
       setServerDown(isNetwork);
       setMessages(prev => [...prev, {
         role: "bot",
-        answer: isNetwork
-          ? "Couldn't reach the AI server. It may be starting up (Render free tier takes ~30 seconds after inactivity) — try again in a moment."
+        answer: isTimeout
+          ? "The request timed out. If the server was inactive, Render free tier takes ~30 seconds to start — try again in a moment."
+          : isNetwork
+          ? "Couldn't reach the server. Check your connection or try again in ~30 seconds."
           : `Something went wrong: ${err.message}`,
         tables: [], charts: [], warnings: [],
       }]);
