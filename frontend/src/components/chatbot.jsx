@@ -560,7 +560,7 @@ function ChatbotPage({ darkMode }) {
             <textarea
               ref={inputRef}
               value={input}
-              onChange={e => setInput(sanitizeInput(e.target.value))}
+              onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder="Ask about a course, professor, or grade trend…"
               rows={1}
