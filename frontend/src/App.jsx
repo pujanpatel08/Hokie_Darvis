@@ -197,7 +197,16 @@ export default function App() {
         darkMode={darkMode} setDarkMode={setDarkMode}
       />
 
-      {renderPage()}
+      <div key={page} style={{ animation: "pageIn 0.22s ease" }}>
+        {renderPage()}
+      </div>
+
+      <style>{`
+        @keyframes pageIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
       {selectedCourse && (
         <CourseDetail

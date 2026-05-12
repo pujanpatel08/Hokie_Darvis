@@ -327,18 +327,52 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   const dm = darkMode;
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(true);
+  const [rmpMap, setRmpMap] = useState({});  // instructorName → {rmp_rating, rmp_difficulty, rmp_count, rmp_tags}
 
   // Fetch full grade detail (rawSections, instructors, etc.) when modal opens
   useEffect(() => {
     setDetailLoading(true);
     setDetail(null);
+    setRmpMap({});
     API.getCourse(course.subject, course.number)
-      .then(d => { setDetail(d); setDetailLoading(false); })
+      .then(d => {
+        setDetail(d);
+        setDetailLoading(false);
+        // After loading sections, fetch RMP data for all instructors in parallel
+        const names = [...new Set((d.rawSections || []).map(s => s.instructor).filter(Boolean))];
+        if (names.length > 0 && window.darvisDb) {
+          window.darvisDb
+            .from("professors")
+            .select("name, rmp_rating, rmp_difficulty, rmp_count, rmp_tags")
+            .in("name", names)
+            .then(({ data }) => {
+              if (data) {
+                const map = {};
+                data.forEach(r => { map[r.name] = r; });
+                setRmpMap(map);
+              }
+            })
+            .catch(() => {});
+        }
+      })
       .catch(() => setDetailLoading(false));
   }, [course.subject, course.number]);
 
+  // Build instructor list from real sections data (falls back to mock if not loaded yet)
   const sections = MOCK.getSections(course.id);
-  const profs = [...new Set(sections.map(s => s.profId))].map(id => MOCK.getProf(id)).filter(Boolean);
+  const instructorNames = detail
+    ? [...new Set(detail.rawSections.map(s => s.instructor).filter(Boolean))]
+    : [];
+  const profs = instructorNames.length > 0
+    ? instructorNames.map(name => ({
+        id: name,
+        name,
+        rmpRating: rmpMap[name]?.rmp_rating ?? null,
+        rmpDifficulty: rmpMap[name]?.rmp_difficulty ?? null,
+        rmpCount: rmpMap[name]?.rmp_count ?? 0,
+        rmpTags: rmpMap[name]?.rmp_tags ?? [],
+      }))
+    : [...new Set(sections.map(s => s.profId))].map(id => MOCK.getProf(id)).filter(Boolean);
   const colors = dm ? {
     bg:      "#0f0f0f",
     surface: "#141414",
@@ -432,8 +466,19 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 14, color: colors.text }}>{prof.name}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                      <StarRating rating={prof.rmpRating} size={12} />
-                      <span style={{ fontSize: 12, color: colors.sub }}>{prof.rmpRating.toFixed(1)} · Diff {prof.rmpDifficulty.toFixed(1)}</span>
+                      {prof.rmpRating != null ? (
+                        <>
+                          <StarRating rating={prof.rmpRating} size={12} />
+                          <span style={{ fontSize: 12, color: colors.sub }}>
+                            {prof.rmpRating.toFixed(1)} · Diff {prof.rmpDifficulty != null ? prof.rmpDifficulty.toFixed(1) : "—"}
+                          </span>
+                          {prof.rmpCount > 0 && (
+                            <span style={{ fontSize: 11, color: colors.sub }}>({prof.rmpCount})</span>
+                          )}
+                        </>
+                      ) : (
+                        <span style={{ fontSize: 12, color: colors.sub }}>No RMP data</span>
+                      )}
                     </div>
                   </div>
                 </button>
