@@ -1,5 +1,5 @@
 // Dashboard + Professor Profile components
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MOCK } from "../mock-data.js";
 import { StarRating } from "./nav-auth.jsx";
 import { GpaBadge, GradeGrid } from "./courses.jsx";
@@ -227,25 +227,69 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
     card: dm ? "#221e27" : "white",
   };
 
-  const courses = MOCK.getProfCourses(prof.id);
-  const sections = MOCK.getProfSections(prof.id);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fake reviews
-  const reviews = [
-    { rating: 5, diff: 4, comment: `${prof.name.split(" ").pop()} is one of the best professors I've had at VT. Challenging but very rewarding.`, date: "Dec 2024", course: courses[0]?.subject + " " + courses[0]?.number },
-    { rating: 4, diff: 3, comment: "Office hours are super helpful. Grades fairly and actually cares about students learning.", date: "May 2024", course: courses[0]?.subject + " " + courses[0]?.number },
-    { rating: prof.rmpRating >= 4 ? 5 : 3, diff: prof.rmpDifficulty >= 4 ? 5 : 3, comment: prof.rmpRating >= 4 ? "Very knowledgeable and engaging lectures. Highly recommend." : "Material is dense and exams are tough. Make sure to go to office hours.", date: "Dec 2023", course: courses[1]?.subject + " " + courses[1]?.number || "" },
-    { rating: 4, diff: 4, comment: "The workload is real but you come out of the class actually knowing the material.", date: "May 2023", course: courses[0]?.subject + " " + courses[0]?.number },
-  ].filter(r => r.course);
+  // Load real course data from Supabase grades table
+  useEffect(() => {
+    if (!window.darvisDb || !prof?.name) { setLoading(false); return; }
+    window.darvisDb
+      .from("grades")
+      .select("subject, course_number, course_title, gpa, a_pct, a_minus_pct, b_plus_pct, b_pct, b_minus_pct, c_plus_pct, c_pct, c_minus_pct, d_plus_pct, d_pct, d_minus_pct, f_pct, graded_enrollment")
+      .eq("instructor", prof.name)
+      .then(({ data }) => {
+        if (!data || data.length === 0) { setLoading(false); return; }
+        // Group by course, compute weighted avg GPA and grade distribution
+        const map = {};
+        data.forEach(row => {
+          const key = `${row.subject} ${row.course_number}`;
+          if (!map[key]) map[key] = { subject: row.subject, number: row.course_number, title: row.course_title, rows: [] };
+          map[key].rows.push(row);
+        });
+        const built = Object.values(map).map(c => {
+          const totalEnroll = c.rows.reduce((s, r) => s + (r.graded_enrollment || 0), 0);
+          const wavg = f => totalEnroll > 0
+            ? c.rows.reduce((s, r) => s + (parseFloat(r[f]) || 0) * (r.graded_enrollment || 0), 0) / totalEnroll
+            : 0;
+          return {
+            id: `${c.subject}-${c.number}`,
+            subject: c.subject,
+            number: c.number,
+            title: c.title,
+            avgGpa: Math.round(wavg("gpa") * 100) / 100,
+            gradeDistribution: {
+              "A": Math.round(wavg("a_pct")), "A-": Math.round(wavg("a_minus_pct")),
+              "B+": Math.round(wavg("b_plus_pct")), "B": Math.round(wavg("b_pct")), "B-": Math.round(wavg("b_minus_pct")),
+              "C+": Math.round(wavg("c_plus_pct")), "C": Math.round(wavg("c_pct")), "C-": Math.round(wavg("c_minus_pct")),
+              "D+": Math.round(wavg("d_plus_pct")), "D": Math.round(wavg("d_pct")), "D-": Math.round(wavg("d_minus_pct")),
+              "F": Math.round(wavg("f_pct")),
+            },
+          };
+        }).sort((a, b) => b.avgGpa - a.avgGpa);
+        setCourses(built);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [prof?.name]);
 
-  const ratingBar = (label, val, max = 5) => (
+  // Derive department from courses
+  const dept = courses[0]?.subject || prof?.dept || null;
+  const deptNames = { CS: "Computer Science", MATH: "Mathematics", ECE: "Electrical & Computer Engineering", BIOL: "Biological Sciences", PHYS: "Physics", CHEM: "Chemistry", HIST: "History", PSYC: "Psychology", STAT: "Statistics", ACIS: "Accounting & Information Systems", ME: "Mechanical Engineering", AOE: "Aerospace & Ocean Engineering", CEE: "Civil & Environmental Engineering" };
+
+  // Safe RMP values
+  const rmpRating = typeof prof?.rmpRating === "number" ? prof.rmpRating : null;
+  const rmpDiff   = typeof prof?.rmpDifficulty === "number" ? prof.rmpDifficulty : null;
+  const rmpCount  = prof?.rmpCount || 0;
+  const tags      = prof?.rmpTags || prof?.tags || [];
+
+  const ratingBar = (label, val) => val == null ? null : (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
         <span style={{ fontSize: 13, color: colors.sub, fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: colors.text }}>{val.toFixed(1)} / {max}</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: colors.text }}>{val.toFixed(1)} / 5</span>
       </div>
       <div style={{ height: 8, background: dm ? "#3d3050" : "#e5e0ea", borderRadius: 4, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${(val / max) * 100}%`, background: "#861F41", borderRadius: 4, transition: "width 0.5s" }} />
+        <div style={{ height: "100%", width: `${(val / 5) * 100}%`, background: "#861F41", borderRadius: 4, transition: "width 0.5s" }} />
       </div>
     </div>
   );
@@ -268,12 +312,14 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
               fontWeight: 900, fontSize: 28,
               display: "flex", alignItems: "center", justifyContent: "center",
               border: "3px solid rgba(255,255,255,0.3)",
-            }}>{prof.name.split(" ").pop().charAt(0)}</div>
+            }}>{(prof?.name || "?").charAt(0)}</div>
             <div>
-              <h1 style={{ margin: 0, color: "white", fontWeight: 800, fontSize: 24 }}>{prof.name}</h1>
-              <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, marginTop: 3 }}>
-                Department of {prof.dept === "CS" ? "Computer Science" : prof.dept === "MATH" ? "Mathematics" : prof.dept === "ECE" ? "Electrical & Computer Engineering" : prof.dept === "BIOL" ? "Biological Sciences" : prof.dept === "HIST" ? "History" : prof.dept === "PSYC" ? "Psychology" : prof.dept === "PHYS" ? "Physics" : prof.dept}
-              </div>
+              <h1 style={{ margin: 0, color: "white", fontWeight: 800, fontSize: 24 }}>{prof?.name}</h1>
+              {dept && (
+                <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, marginTop: 3 }}>
+                  {deptNames[dept] ? `Department of ${deptNames[dept]}` : dept}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -281,58 +327,79 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
 
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 24px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 24, alignItems: "flex-start" }}>
-          {/* Left: ratings card */}
+          {/* Left: RMP card */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{
-              background: colors.card, border: `1.5px solid ${colors.border}`,
-              borderRadius: 16, padding: "24px",
-            }}>
-              <div style={{ textAlign: "center", marginBottom: 20 }}>
-                <div style={{ fontSize: 52, fontWeight: 900, color: "#861F41", lineHeight: 1 }}>{prof.rmpRating.toFixed(1)}</div>
-                <StarRating rating={prof.rmpRating} size={18} />
-                <div style={{ color: colors.sub, fontSize: 13, marginTop: 6 }}>Based on {prof.rmpCount} ratings</div>
-                <div style={{ display: "inline-block", marginTop: 8, background: "#fdf4f6", border: "1px solid #f5c0cc", borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 700, color: "#861F41" }}>
-                  RateMyProfessors
+            <div style={{ background: colors.card, border: `1.5px solid ${colors.border}`, borderRadius: 16, padding: "24px" }}>
+              {rmpRating != null ? (
+                <>
+                  <div style={{ textAlign: "center", marginBottom: 20 }}>
+                    <div style={{ fontSize: 52, fontWeight: 900, color: "#861F41", lineHeight: 1 }}>{rmpRating.toFixed(1)}</div>
+                    <StarRating rating={rmpRating} size={18} />
+                    <div style={{ color: colors.sub, fontSize: 13, marginTop: 6 }}>Based on {rmpCount} ratings</div>
+                    <div style={{ display: "inline-block", marginTop: 8, background: "#fdf4f6", border: "1px solid #f5c0cc", borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 700, color: "#861F41" }}>
+                      RateMyProfessors
+                    </div>
+                  </div>
+                  {ratingBar("Overall Quality", rmpRating)}
+                  {ratingBar("Difficulty", rmpDiff)}
+                  {tags.length > 0 && (
+                    <div style={{ marginTop: 16 }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>Student Tags</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {tags.map(t => (
+                          <span key={t} style={{ background: dm ? "#3d3050" : "#f0edf8", color: dm ? "#c8b8d8" : "#5a3a6a", borderRadius: 20, padding: "4px 10px", fontSize: 12, fontWeight: 700 }}>{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ textAlign: "center", padding: "16px 0" }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>📊</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: colors.text, marginBottom: 6 }}>No RMP data</div>
+                  <div style={{ fontSize: 13, color: colors.sub, lineHeight: 1.5 }}>
+                    This instructor doesn't have a Rate My Professors profile yet.
+                  </div>
                 </div>
-              </div>
-              {ratingBar("Overall Quality", prof.rmpRating)}
-              {ratingBar("Difficulty", prof.rmpDifficulty)}
-              {ratingBar("Would Take Again", prof.rmpRating * 0.9)}
-
-              <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>Student Tags</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {prof.tags.map(t => (
-                    <span key={t} style={{
-                      background: dm ? "#3d3050" : "#f0edf8",
-                      color: dm ? "#c8b8d8" : "#5a3a6a",
-                      borderRadius: 20, padding: "4px 10px", fontSize: 12, fontWeight: 700,
-                    }}>{t}</span>
-                  ))}
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* Bio */}
-            <div style={{
-              background: colors.card, border: `1.5px solid ${colors.border}`,
-              borderRadius: 16, padding: "20px",
-            }}>
-              <h3 style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 800, color: colors.text }}>About</h3>
-              <p style={{ margin: 0, fontSize: 13, color: colors.sub, lineHeight: 1.6 }}>{prof.bio}</p>
-            </div>
+            {/* Grade summary card */}
+            {courses.length > 0 && (
+              <div style={{ background: colors.card, border: `1.5px solid ${colors.border}`, borderRadius: 16, padding: "20px" }}>
+                <h3 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 800, color: colors.text }}>Grade Summary</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 13, color: colors.sub }}>Courses taught</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>{courses.length}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 13, color: colors.sub }}>Best avg GPA</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#1a7a38" }}>{courses[0]?.avgGpa?.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 13, color: colors.sub }}>Overall avg GPA</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>
+                      {courses.length > 0 ? (courses.reduce((s, c) => s + c.avgGpa, 0) / courses.length).toFixed(2) : "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right: courses + reviews */}
+          {/* Right: courses + grade distributions */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* Courses */}
             <div>
               <h2 style={{ margin: "0 0 14px", fontSize: 17, fontWeight: 800, color: colors.text }}>Courses Taught</h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12 }}>
-                {courses.map(course => {
-                  const secs = sections.filter(s => s.courseId === course.id);
-                  return (
-                    <button key={course.id} onClick={() => onCourseClick(course)} style={{
+              {loading ? (
+                <div style={{ color: colors.sub, fontSize: 14 }}>Loading course data…</div>
+              ) : courses.length === 0 ? (
+                <div style={{ color: colors.sub, fontSize: 14 }}>No course data found for this instructor.</div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12 }}>
+                  {courses.map(course => (
+                    <button key={course.id} onClick={() => onCourseClick({ subject: course.subject, number: course.number, title: course.title, avgGpa: course.avgGpa, gradeDistribution: course.gradeDistribution, id: course.id, credits: 3, description: "", pathways: [] })} style={{
                       background: colors.card, border: `1.5px solid ${colors.border}`,
                       borderRadius: 14, padding: "16px", cursor: "pointer", textAlign: "left",
                       fontFamily: "'Plus Jakarta Sans', sans-serif", transition: "all 0.15s",
@@ -344,63 +411,31 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
                         <span style={{ background: "#861F41", color: "white", borderRadius: 7, padding: "3px 10px", fontWeight: 800, fontSize: 12 }}>
                           {course.subject} {course.number}
                         </span>
-                        <GpaBadge gpa={course.avgGpa} />
+                        {course.avgGpa > 0 && <GpaBadge gpa={course.avgGpa} />}
                       </div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: colors.text, marginBottom: 4 }}>{course.title}</div>
-                      <div style={{ fontSize: 12, color: colors.sub }}>{secs.length} section{secs.length !== 1 ? "s" : ""} this term</div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: colors.text }}>{course.title}</div>
                     </button>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Grade distributions */}
-            <div>
-              <h2 style={{ margin: "0 0 14px", fontSize: 17, fontWeight: 800, color: colors.text }}>Grade Distributions</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {courses.slice(0, 3).map(course => (
-                  <div key={course.id} style={{
-                    background: colors.card, border: `1.5px solid ${colors.border}`,
-                    borderRadius: 14, padding: "18px 20px",
-                  }}>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: colors.text, marginBottom: 12 }}>
-                      {course.subject} {course.number}: {course.title}
-                    </div>
-                    <GradeGrid dist={course.gradeDistribution} darkMode={dm} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Reviews */}
-            <div>
-              <h2 style={{ margin: "0 0 14px", fontSize: 17, fontWeight: 800, color: colors.text }}>Student Reviews</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {reviews.map((r, i) => (
-                  <div key={i} style={{
-                    background: colors.card, border: `1.5px solid ${colors.border}`,
-                    borderRadius: 14, padding: "18px 20px",
-                  }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                        <div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <StarRating rating={r.rating} size={14} />
-                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.sub }}>Quality: {r.rating}/5</span>
-                          </div>
-                          <div style={{ fontSize: 12, color: colors.sub, marginTop: 2 }}>Difficulty: {r.diff}/5</div>
-                        </div>
+            {courses.length > 0 && (
+              <div>
+                <h2 style={{ margin: "0 0 14px", fontSize: 17, fontWeight: 800, color: colors.text }}>Grade Distributions</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {courses.slice(0, 4).map(course => (
+                    <div key={course.id} style={{ background: colors.card, border: `1.5px solid ${colors.border}`, borderRadius: 14, padding: "18px 20px" }}>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: colors.text, marginBottom: 12 }}>
+                        {course.subject} {course.number}: {course.title}
                       </div>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                        <span style={{ fontSize: 11, color: colors.sub }}>{r.date}</span>
-                        {r.course && <span style={{ background: dm ? "#3d3050" : "#f0edf8", color: dm ? "#c8b8d8" : "#5a3a6a", borderRadius: 10, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{r.course}</span>}
-                      </div>
+                      <GradeGrid dist={course.gradeDistribution} darkMode={dm} />
                     </div>
-                    <p style={{ margin: 0, fontSize: 14, color: colors.text, lineHeight: 1.6, fontStyle: "italic" }}>"{r.comment}"</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
