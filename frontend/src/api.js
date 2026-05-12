@@ -110,7 +110,7 @@ export const API = {
     if (instructorNames.length > 0) {
       const { data: rmpRows } = await db
         .from('professors')
-        .select('name, rmp_rating, rmp_difficulty, rmp_count, rmp_tags')
+        .select('name, rmp_rating, rmp_difficulty, rmp_count, rmp_tags, rmp_reviews, rmp_id')
         .in('name', instructorNames);
       if (rmpRows) {
         rmpRows.forEach(r => { rmpMap[r.name] = r; });

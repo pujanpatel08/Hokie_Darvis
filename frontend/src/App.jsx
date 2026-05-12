@@ -33,6 +33,7 @@ export default function App() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [pendingPage, setPendingPage] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [profReturnCourse, setProfReturnCourse] = useState(null);
 
   // Persist schedule and theme
   useEffect(() => {
@@ -107,6 +108,7 @@ export default function App() {
   const openProf = prof => {
     setSelectedProf(prof);
     setProfReturnPage(page);
+    setProfReturnCourse(selectedCourse);  // remember which course was open
     setSelectedCourse(null);
     setPage("professor");
   };
@@ -114,6 +116,11 @@ export default function App() {
   const closeProf = () => {
     setPage(profReturnPage || "search");
     setSelectedProf(null);
+    // Reopen the course detail modal if professor was opened from one
+    if (profReturnCourse) {
+      setSelectedCourse(profReturnCourse);
+      setProfReturnCourse(null);
+    }
   };
 
   // Show nothing until Clerk finishes loading (avoids auth gate flash)

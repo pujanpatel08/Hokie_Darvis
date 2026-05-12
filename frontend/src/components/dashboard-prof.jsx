@@ -230,6 +230,12 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
 
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   // Load real course data from Supabase grades table
   useEffect(() => {
@@ -278,10 +284,14 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
   const deptNames = { CS: "Computer Science", MATH: "Mathematics", ECE: "Electrical & Computer Engineering", BIOL: "Biological Sciences", PHYS: "Physics", CHEM: "Chemistry", HIST: "History", PSYC: "Psychology", STAT: "Statistics", ACIS: "Accounting & Information Systems", ME: "Mechanical Engineering", AOE: "Aerospace & Ocean Engineering", CEE: "Civil & Environmental Engineering" };
 
   // Safe RMP values
-  const rmpRating = typeof prof?.rmpRating === "number" ? prof.rmpRating : null;
-  const rmpDiff   = typeof prof?.rmpDifficulty === "number" ? prof.rmpDifficulty : null;
-  const rmpCount  = prof?.rmpCount || 0;
-  const tags      = prof?.rmpTags || prof?.tags || [];
+  const rmpRating  = typeof prof?.rmpRating === "number" ? prof.rmpRating : null;
+  const rmpDiff    = typeof prof?.rmpDifficulty === "number" ? prof.rmpDifficulty : null;
+  const rmpCount   = prof?.rmpCount || 0;
+  const tags       = prof?.rmpTags || prof?.tags || [];
+  const rmpReviews = Array.isArray(prof?.rmpReviews) ? prof.rmpReviews : [];
+  const rmpId      = prof?.rmpId ?? null;
+  // RMP profile search URL (VT school ID = 1349)
+  const rmpSearchUrl = `https://www.ratemyprofessors.com/search/professors/1349?q=${encodeURIComponent((prof?.name || "").split(" ").pop())}`;
 
   const ratingBar = (label, val) => val == null ? null : (
     <div style={{ marginBottom: 10 }}>
@@ -298,26 +308,26 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
   return (
     <div style={{ background: colors.bg, minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #6b1833 0%, #861F41 60%, #a02850 100%)", padding: "32px 24px 28px" }}>
+      <div style={{ background: "linear-gradient(135deg, #6b1833 0%, #861F41 60%, #a02850 100%)", padding: isMobile ? "20px 16px 18px" : "32px 24px 28px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <button onClick={onBack} style={{
             background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8,
             color: "white", padding: "6px 14px", cursor: "pointer",
             fontWeight: 600, fontSize: 13, fontFamily: "'Plus Jakarta Sans', sans-serif",
-            marginBottom: 16,
+            marginBottom: 14,
           }}>← Back</button>
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 14 : 20 }}>
             <div style={{
-              width: 72, height: 72, borderRadius: "50%",
+              width: isMobile ? 52 : 72, height: isMobile ? 52 : 72, borderRadius: "50%",
               background: "#f0c050", color: "#861F41",
-              fontWeight: 900, fontSize: 28,
+              fontWeight: 900, fontSize: isMobile ? 22 : 28,
               display: "flex", alignItems: "center", justifyContent: "center",
-              border: "3px solid rgba(255,255,255,0.3)",
+              border: "3px solid rgba(255,255,255,0.3)", flexShrink: 0,
             }}>{(prof?.name || "?").charAt(0)}</div>
             <div>
-              <h1 style={{ margin: 0, color: "white", fontWeight: 800, fontSize: 24 }}>{prof?.name}</h1>
+              <h1 style={{ margin: 0, color: "white", fontWeight: 800, fontSize: isMobile ? 20 : 24 }}>{prof?.name}</h1>
               {dept && (
-                <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, marginTop: 3 }}>
+                <div style={{ color: "rgba(255,255,255,0.75)", fontSize: isMobile ? 13 : 15, marginTop: 3 }}>
                   {deptNames[dept] ? `Department of ${deptNames[dept]}` : dept}
                 </div>
               )}
@@ -326,8 +336,8 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
         </div>
       </div>
 
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 24px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 24, alignItems: "flex-start" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "16px 14px" : "28px 24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "300px 1fr", gap: 20, alignItems: "flex-start" }}>
           {/* Left: RMP card */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ background: colors.card, border: `1.5px solid ${colors.border}`, borderRadius: 16, padding: "24px" }}>
@@ -398,7 +408,7 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
               ) : courses.length === 0 ? (
                 <div style={{ color: colors.sub, fontSize: 14 }}>No course data found for this instructor.</div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
                   {courses.map(course => (
                     <button key={course.id} onClick={() => onCourseClick({ subject: course.subject, number: course.number, title: course.title, avgGpa: course.avgGpa, gradeDistribution: course.gradeDistribution, id: course.id, credits: 3, description: "", pathways: [] })} style={{
                       background: colors.card, border: `1.5px solid ${colors.border}`,
@@ -437,9 +447,106 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
                 </div>
               </div>
             )}
+
+            {/* Student Reviews */}
+            {rmpRating != null && (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: colors.text }}>Student Reviews</h2>
+                  <a href={rmpSearchUrl} target="_blank" rel="noopener noreferrer" style={{
+                    fontSize: 13, color: "#861F41", fontWeight: 700, textDecoration: "none",
+                  }}>View on RMP ↗</a>
+                </div>
+
+                {rmpReviews.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {rmpReviews.slice(0, 6).map((review, i) => (
+                      <ReviewCard key={i} review={review} darkMode={dm} colors={colors} />
+                    ))}
+                    {rmpReviews.length > 6 && (
+                      <a href={rmpSearchUrl} target="_blank" rel="noopener noreferrer" style={{
+                        display: "block", textAlign: "center", padding: "12px",
+                        background: colors.card, border: `1.5px solid ${colors.border}`,
+                        borderRadius: 12, color: "#861F41", fontWeight: 700, fontSize: 14,
+                        textDecoration: "none",
+                      }}>
+                        View all {rmpReviews.length} reviews on RateMyProfessors ↗
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{
+                    background: colors.card, border: `1.5px solid ${colors.border}`,
+                    borderRadius: 14, padding: "28px 24px", textAlign: "center",
+                  }}>
+                    <div style={{ fontSize: 28, marginBottom: 10 }}>💬</div>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: colors.text, marginBottom: 6 }}>
+                      {rmpCount} ratings on RateMyProfessors
+                    </div>
+                    <div style={{ fontSize: 13, color: colors.sub, marginBottom: 16, lineHeight: 1.5 }}>
+                      We don't store individual reviews locally yet. Read them directly on RMP.
+                    </div>
+                    <a href={rmpSearchUrl} target="_blank" rel="noopener noreferrer" style={{
+                      display: "inline-block", background: "#861F41", color: "white",
+                      borderRadius: 10, padding: "9px 20px", fontWeight: 700, fontSize: 14,
+                      textDecoration: "none",
+                    }}>Read reviews on RateMyProfessors ↗</a>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Review Card ───────────────────────────────────────────────────
+function ReviewCard({ review, darkMode, colors }) {
+  const dm = darkMode;
+  const quality    = review.quality    ?? review.rating      ?? null;
+  const difficulty = review.difficulty ?? null;
+  const comment    = review.comment    ?? review.text        ?? "";
+  const className  = review.class      ?? review.courseName  ?? null;
+  const date       = review.date       ?? review.createdAt   ?? null;
+
+  return (
+    <div style={{
+      background: colors.card, border: `1.5px solid ${colors.border}`,
+      borderRadius: 14, padding: "16px 20px",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: comment ? 10 : 0, flexWrap: "wrap" }}>
+        {quality != null && (
+          <span style={{
+            background: quality >= 4 ? "#dcfce7" : quality >= 3 ? "#fef3c7" : "#fee2e2",
+            color: quality >= 4 ? "#1a7a38" : quality >= 3 ? "#b45309" : "#c0392b",
+            fontWeight: 800, fontSize: 13, padding: "3px 10px", borderRadius: 20,
+          }}>{quality.toFixed(1)} / 5</span>
+        )}
+        {difficulty != null && (
+          <span style={{ fontSize: 13, color: colors.sub, fontWeight: 600 }}>
+            Difficulty: {difficulty.toFixed(1)}
+          </span>
+        )}
+        {className && (
+          <span style={{
+            background: dm ? "#3d3050" : "#f0edf8", color: dm ? "#c8b8d8" : "#5a3a6a",
+            fontWeight: 700, fontSize: 12, padding: "3px 9px", borderRadius: 20,
+          }}>{className}</span>
+        )}
+        {date && (
+          <span style={{ fontSize: 12, color: colors.sub, marginLeft: "auto" }}>
+            {new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+          </span>
+        )}
+      </div>
+      {comment && (
+        <p style={{
+          margin: 0, fontSize: 14, color: colors.text, lineHeight: 1.6,
+          display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden",
+        }}>{comment}</p>
+      )}
     </div>
   );
 }

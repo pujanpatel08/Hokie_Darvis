@@ -327,6 +327,12 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   const dm = darkMode;
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 700);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 700);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   // Fetch full grade detail + RMP data in one call
   useEffect(() => {
@@ -351,6 +357,8 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
         rmpDifficulty: rmpMap[name]?.rmp_difficulty ?? null,
         rmpCount:     rmpMap[name]?.rmp_count      ?? 0,
         rmpTags:      rmpMap[name]?.rmp_tags       ?? [],
+        rmpReviews:   rmpMap[name]?.rmp_reviews    ?? [],
+        rmpId:        rmpMap[name]?.rmp_id         ?? null,
       }))
     : [...new Set(sections.map(s => s.profId))].map(id => MOCK.getProf(id)).filter(Boolean);
   const colors = dm ? {
@@ -371,22 +379,33 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
     <div style={{
       position: "fixed", inset: 0, zIndex: 300,
       background: "rgba(0,0,0,0.5)", display: "flex",
-      alignItems: "flex-start", justifyContent: "center", padding: "40px 24px",
+      alignItems: "flex-start", justifyContent: "center",
+      padding: isMobile ? "0" : "40px 24px",
       overflowY: "auto",
     }} onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={{
-        background: colors.bg, borderRadius: 20,
+        background: colors.bg,
+        borderRadius: isMobile ? "20px 20px 0 0" : 20,
         boxShadow: "0 24px 80px rgba(0,0,0,0.25)",
         width: "100%", maxWidth: 1040,
         fontFamily: "'Plus Jakarta Sans', sans-serif",
         border: `1px solid ${colors.border}`,
         marginBottom: 40,
+        marginTop: isMobile ? "auto" : 0,
+        ...(isMobile ? { position: "absolute", bottom: 0, left: 0, right: 0, marginBottom: 0, maxHeight: "92vh", overflowY: "auto" } : {}),
       }}>
+        {/* Mobile drag handle */}
+        {isMobile && (
+          <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 0" }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: dm ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)" }} />
+          </div>
+        )}
+
         {/* Header */}
-        <div style={{ padding: "28px 32px 0", borderBottom: `1px solid ${colors.border}` }}>
+        <div style={{ padding: isMobile ? "16px 20px 0" : "28px 32px 0", borderBottom: `1px solid ${colors.border}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                 <span style={{ background: "#861F41", color: "white", borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: 13, letterSpacing: "0.5px" }}>
                   {course.subject} {course.number}
                 </span>
@@ -395,11 +414,11 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
                 </span>
                 <GpaBadge gpa={course.avgGpa} />
               </div>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: colors.text }}>{course.title}</h2>
+              <h2 style={{ margin: 0, fontSize: isMobile ? 18 : 22, fontWeight: 800, color: colors.text, lineHeight: 1.3 }}>{course.title}</h2>
             </div>
             <button onClick={onClose} style={{
               background: dm ? "#3d3050" : "#f0f0f0", border: "none", borderRadius: 8,
-              width: 36, height: 36, cursor: "pointer", fontSize: 18, color: colors.sub, flexShrink: 0,
+              width: 36, height: 36, cursor: "pointer", fontSize: 18, color: colors.sub, flexShrink: 0, marginLeft: 12,
             }}>✕</button>
           </div>
 
@@ -427,40 +446,47 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
           )}
         </div>
 
-        {/* Professors */}
+        {/* Professors — compact list */}
         {profs.length > 0 && (
-          <div style={{ padding: "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
-            <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>Instructors</h3>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              {profs.map(prof => (
+          <div style={{ padding: isMobile ? "14px 20px" : "16px 32px", borderBottom: `1px solid ${colors.border}` }}>
+            <h3 style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>Instructors</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {profs.map((prof, i) => (
                 <button key={prof.id} onClick={() => onProfClick(prof)} style={{
-                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
-                  background: colors.surface, borderRadius: 12, border: `1px solid ${colors.border}`,
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "7px 10px", margin: 0,
+                  background: "transparent", border: "none", borderRadius: 8,
                   cursor: "pointer", textAlign: "left",
-                }}>
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = dm ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >
+                  {/* Avatar initial */}
                   <div style={{
-                    width: 40, height: 40, borderRadius: "50%", background: "#861F41",
-                    color: "white", fontWeight: 800, fontSize: 16,
+                    width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                    background: `hsl(${(prof.name.charCodeAt(0) * 37) % 360}, 55%, 42%)`,
+                    color: "white", fontWeight: 800, fontSize: 12,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>{prof.name.split(" ").pop().charAt(0)}</div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: colors.text }}>{prof.name}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                      {prof.rmpRating != null ? (
-                        <>
-                          <StarRating rating={prof.rmpRating} size={12} />
-                          <span style={{ fontSize: 12, color: colors.sub }}>
-                            {prof.rmpRating.toFixed(1)} · Diff {prof.rmpDifficulty != null ? prof.rmpDifficulty.toFixed(1) : "—"}
-                          </span>
-                          {prof.rmpCount > 0 && (
-                            <span style={{ fontSize: 11, color: colors.sub }}>({prof.rmpCount})</span>
-                          )}
-                        </>
-                      ) : (
-                        <span style={{ fontSize: 12, color: colors.sub }}>No RMP data</span>
-                      )}
+                  }}>{prof.name.charAt(0)}</div>
+
+                  {/* Name */}
+                  <span style={{ fontWeight: 600, fontSize: 13, color: colors.text, minWidth: 90 }}>{prof.name}</span>
+
+                  {/* RMP inline */}
+                  {prof.rmpRating != null ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <StarRating rating={prof.rmpRating} size={11} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#861F41" }}>{prof.rmpRating.toFixed(1)}</span>
+                      <span style={{ fontSize: 11, color: colors.sub }}>· Diff {prof.rmpDifficulty?.toFixed(1) ?? "—"}</span>
+                      <span style={{ fontSize: 11, color: colors.sub }}>({prof.rmpCount})</span>
                     </div>
-                  </div>
+                  ) : (
+                    <span style={{ fontSize: 11, color: colors.sub, fontStyle: "italic" }}>No RMP data</span>
+                  )}
+
+                  {/* Arrow */}
+                  <span style={{ marginLeft: "auto", fontSize: 11, color: colors.sub, opacity: 0.5 }}>›</span>
                 </button>
               ))}
             </div>
@@ -468,13 +494,13 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
         )}
 
         {/* Grade Distribution */}
-        <div style={{ padding: "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
+        <div style={{ padding: isMobile ? "16px 20px" : "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
           <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>Grade Distribution (All Sections)</h3>
           <GradeGrid dist={course.gradeDistribution} darkMode={dm} />
         </div>
 
         {/* Section Breakdown */}
-        <div style={{ padding: "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
+        <div style={{ padding: isMobile ? "16px 20px" : "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
           <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
             Section-by-Section Breakdown
             {detail && <span style={{ marginLeft: 8, fontWeight: 600, textTransform: "none", letterSpacing: 0, fontSize: 13 }}>— {detail.rawSections.length} sections on record</span>}
@@ -488,34 +514,35 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
           )}
         </div>
 
-        {/* Sections */}
-        <div style={{ padding: "20px 0 0" }}>
-          <h3 style={{ margin: "0 0 0", padding: "0 32px 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-            Available Sections — Fall 2025
-          </h3>
-          <div style={{
-            display: "grid", gridTemplateColumns: "70px 1fr 140px 100px 100px 90px",
-            gap: 12, padding: "8px 16px", fontSize: 11, fontWeight: 800,
-            color: colors.sub, textTransform: "uppercase", letterSpacing: "0.5px",
-            borderBottom: `1px solid ${colors.border}`,
-          }}>
-            <div>CRN</div><div>Instructor</div><div>Time</div><div>Location</div><div>Seats</div><div>Action</div>
+        {/* Sections — hidden on mobile to keep the sheet manageable */}
+        {!isMobile && (
+          <div style={{ padding: "20px 0 0" }}>
+            <h3 style={{ margin: "0 0 0", padding: "0 32px 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+              Available Sections — Fall 2025
+            </h3>
+            <div style={{
+              display: "grid", gridTemplateColumns: "70px 1fr 140px 100px 100px 90px",
+              gap: 12, padding: "8px 16px", fontSize: 11, fontWeight: 800,
+              color: colors.sub, textTransform: "uppercase", letterSpacing: "0.5px",
+              borderBottom: `1px solid ${colors.border}`,
+            }}>
+              <div>CRN</div><div>Instructor</div><div>Time</div><div>Location</div><div>Seats</div><div>Action</div>
+            </div>
+            {sections.length === 0 ? (
+              <div style={{ padding: "24px 32px", color: colors.sub, textAlign: "center" }}>No sections available this term.</div>
+            ) : sections.map(sec => (
+              <SectionRow
+                key={sec.id}
+                section={sec}
+                onAdd={onAdd}
+                onRemove={onRemove}
+                inSchedule={schedule.includes(sec.id)}
+                onProfClick={onProfClick}
+                darkMode={dm}
+              />
+            ))}
           </div>
-          {sections.length === 0 ? (
-            <div style={{ padding: "24px 32px", color: colors.sub, textAlign: "center" }}>No sections available this term.</div>
-          ) : sections.map(sec => (
-            <SectionRow
-              key={sec.id}
-              section={sec}
-              user={user}
-              onAdd={onAdd}
-              onRemove={onRemove}
-              inSchedule={schedule.includes(sec.id)}
-              onProfClick={onProfClick}
-              darkMode={dm}
-            />
-          ))}
-        </div>
+        )}
       </div>
     </div>
   );
