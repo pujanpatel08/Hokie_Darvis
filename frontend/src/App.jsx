@@ -51,22 +51,51 @@ export default function App() {
     }
   }, [isSignedIn, userLoaded, user]);
 
+  // Seed browser history with a valid state so back button stays inside the app.
+  // Without this, back exits into Clerk's OAuth callback URLs (which Google rejects as 400).
+  useEffect(() => {
+    window.history.replaceState({ page: "landing" }, "");
+  }, []);
+
+  // Handle browser back/forward — read the state we pushed and update React accordingly.
+  useEffect(() => {
+    const handlePop = (e) => {
+      const target = e.state?.page;
+      if (!target) {
+        // Backed into an external URL (OAuth callback, etc.) — reset to landing.
+        window.history.replaceState({ page: "landing" }, "", "/");
+        setPage("landing");
+        return;
+      }
+      if (PROTECTED.has(target) && !isSignedIn) {
+        setPage("landing");
+      } else {
+        setPage(target);
+      }
+    };
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, [isSignedIn]);
+
   // After sign-in, navigate to the page the user originally tried to access
   useEffect(() => {
     if (isSignedIn && pendingPage) {
       setPage(pendingPage);
+      window.history.pushState({ page: pendingPage }, "");
       setPendingPage(null);
       setShowAuthModal(false);
     }
   }, [isSignedIn, pendingPage]);
 
-  // Intercepts navigation — shows auth modal instead of navigating if page is protected
+  // Intercepts navigation — shows auth modal instead of navigating if page is protected.
+  // Also pushes to browser history so the back button works within the app.
   const navigateTo = (newPage) => {
     if (PROTECTED.has(newPage) && !isSignedIn) {
       setPendingPage(newPage);
       setShowAuthModal(true);
     } else {
       setPage(newPage);
+      window.history.pushState({ page: newPage }, "");
     }
   };
 

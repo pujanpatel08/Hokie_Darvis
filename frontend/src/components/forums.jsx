@@ -152,10 +152,12 @@ function NewPostModal({ onClose, onSubmit, saving, darkMode, defaultCategory = "
 
 // ── Post thread view ──────────────────────────────────────────────
 function PostThread({ post, onBack, darkMode, currentUser }) {
-  const [replies,  setReplies]  = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [replyBody, setReplyBody] = useState("");
-  const [saving,   setSaving]   = useState(false);
+  const [replies,        setReplies]        = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [replyBody,      setReplyBody]      = useState("");
+  const [saving,         setSaving]         = useState(false);
+  const [confirmPost,    setConfirmPost]    = useState(false);   // two-click confirm for post delete
+  const [confirmReply,   setConfirmReply]   = useState(null);    // reply id being confirmed
 
   const dm = darkMode;
   const bg     = dm ? "#080808" : "#f7f4f0";
@@ -195,6 +197,19 @@ function PostThread({ post, onBack, darkMode, currentUser }) {
     setSaving(false);
   };
 
+  const deletePost = async () => {
+    await db.from("forum_posts").delete().eq("id", post.id);
+    onBack(); // cascade deletes all replies via Supabase FK
+  };
+
+  const deleteReply = async (replyId) => {
+    const { error } = await db.from("forum_replies").delete().eq("id", replyId);
+    if (!error) {
+      setConfirmReply(null);
+      fetchReplies();
+    }
+  };
+
   return (
     <div style={{ background: bg, minHeight: "calc(100vh - 60px)", fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 80 }}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "40px 48px 0" }}>
@@ -223,10 +238,23 @@ function PostThread({ post, onBack, darkMode, currentUser }) {
           <p style={{ margin: "0 0 20px", fontSize: 15, color: text, lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
             {post.body}
           </p>
-          <div style={{ fontSize: 12, color: sub, display: "flex", gap: 12 }}>
+          <div style={{ fontSize: 12, color: sub, display: "flex", gap: 12, alignItems: "center" }}>
             <span style={{ fontWeight: 600 }}>@{post.username}</span>
             <span>{timeAgo(post.created_at)}</span>
             <span>{post.reply_count} {post.reply_count === 1 ? "reply" : "replies"}</span>
+            {currentUser?.id === post.clerk_user_id && (
+              <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+                {confirmPost ? (
+                  <>
+                    <span style={{ color: sub }}>Delete this post?</span>
+                    <button onClick={deletePost} style={{ background: "#c0392b", color: "white", border: "none", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Yes, delete</button>
+                    <button onClick={() => setConfirmPost(false)} style={{ background: "none", border: "none", color: sub, fontSize: 12, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
+                  </>
+                ) : (
+                  <button onClick={() => setConfirmPost(true)} style={{ background: "none", border: "none", color: sub, fontSize: 12, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 0 }}>Delete</button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -248,9 +276,22 @@ function PostThread({ post, onBack, darkMode, currentUser }) {
                 <p style={{ margin: "0 0 12px", fontSize: 14, color: text, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
                   {r.body}
                 </p>
-                <div style={{ fontSize: 12, color: sub, display: "flex", gap: 10 }}>
+                <div style={{ fontSize: 12, color: sub, display: "flex", gap: 10, alignItems: "center" }}>
                   <span style={{ fontWeight: 600 }}>@{r.username}</span>
                   <span>{timeAgo(r.created_at)}</span>
+                  {currentUser?.id === r.clerk_user_id && (
+                    <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+                      {confirmReply === r.id ? (
+                        <>
+                          <span style={{ color: sub }}>Delete?</span>
+                          <button onClick={() => deleteReply(r.id)} style={{ background: "#c0392b", color: "white", border: "none", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Yes</button>
+                          <button onClick={() => setConfirmReply(null)} style={{ background: "none", border: "none", color: sub, fontSize: 12, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 0 }}>Cancel</button>
+                        </>
+                      ) : (
+                        <button onClick={() => setConfirmReply(r.id)} style={{ background: "none", border: "none", color: sub, fontSize: 12, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 0 }}>Delete</button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -311,8 +352,9 @@ function PostThread({ post, onBack, darkMode, currentUser }) {
 
 // ── Category view ─────────────────────────────────────────────────
 function CategoryView({ category, onBack, onOpenPost, onNewPost, darkMode, currentUser }) {
-  const [posts,   setPosts]   = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [posts,         setPosts]         = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState(null); // post id being confirmed
 
   const dm = darkMode;
   const bg     = dm ? "#080808" : "#f7f4f0";
@@ -335,6 +377,15 @@ function CategoryView({ category, onBack, onOpenPost, onNewPost, darkMode, curre
       setLoading(false);
     })();
   }, [category.title]);
+
+  const handleDeletePost = async (postId, e) => {
+    e.stopPropagation();
+    const { error } = await db.from("forum_posts").delete().eq("id", postId);
+    if (!error) {
+      setConfirmDelete(null);
+      setPosts(prev => prev.filter(p => p.id !== postId));
+    }
+  };
 
   return (
     <div style={{ background: bg, minHeight: "calc(100vh - 60px)", fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 80 }}>
@@ -383,30 +434,47 @@ function CategoryView({ category, onBack, onOpenPost, onNewPost, darkMode, curre
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {posts.map(post => (
-              <button
+              <div
                 key={post.id}
-                onClick={() => onOpenPost(post)}
                 style={{
                   background: cardBg, border: `1px solid ${border}`,
                   borderRadius: 12, padding: "18px 22px",
-                  textAlign: "left", cursor: "pointer", width: "100%",
-                  transition: "background 0.15s",
+                  position: "relative",
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = cardHov}
-                onMouseLeave={e => e.currentTarget.style.background = cardBg}
               >
-                <div style={{ fontSize: 15, fontWeight: 700, color: head, lineHeight: 1.4, marginBottom: 8 }}>
-                  {post.title}
-                </div>
-                <div style={{ fontSize: 13, color: text, lineHeight: 1.5, marginBottom: 10, opacity: 0.75 }}>
-                  {post.body.length > 120 ? post.body.slice(0, 120) + "…" : post.body}
-                </div>
-                <div style={{ display: "flex", gap: 12, fontSize: 12, color: sub }}>
+                <button
+                  onClick={() => onOpenPost(post)}
+                  style={{
+                    background: "none", border: "none", padding: 0, cursor: "pointer",
+                    textAlign: "left", width: "100%",
+                  }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 700, color: head, lineHeight: 1.4, marginBottom: 8 }}>
+                    {post.title}
+                  </div>
+                  <div style={{ fontSize: 13, color: text, lineHeight: 1.5, marginBottom: 10, opacity: 0.75 }}>
+                    {post.body.length > 120 ? post.body.slice(0, 120) + "…" : post.body}
+                  </div>
+                </button>
+                <div style={{ display: "flex", gap: 12, fontSize: 12, color: sub, alignItems: "center" }}>
                   <span style={{ fontWeight: 600 }}>@{post.username}</span>
                   <span>{timeAgo(post.created_at)}</span>
-                  <span style={{ marginLeft: "auto" }}>{post.reply_count} {post.reply_count === 1 ? "reply" : "replies"}</span>
+                  <span>{post.reply_count} {post.reply_count === 1 ? "reply" : "replies"}</span>
+                  {currentUser?.id === post.clerk_user_id && (
+                    <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+                      {confirmDelete === post.id ? (
+                        <>
+                          <span style={{ color: sub }}>Delete post?</span>
+                          <button onClick={e => handleDeletePost(post.id, e)} style={{ background: "#c0392b", color: "white", border: "none", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Yes</button>
+                          <button onClick={e => { e.stopPropagation(); setConfirmDelete(null); }} style={{ background: "none", border: "none", color: sub, fontSize: 12, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 0 }}>Cancel</button>
+                        </>
+                      ) : (
+                        <button onClick={e => { e.stopPropagation(); setConfirmDelete(post.id); }} style={{ background: "none", border: "none", color: sub, fontSize: 12, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 0 }}>Delete</button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}
