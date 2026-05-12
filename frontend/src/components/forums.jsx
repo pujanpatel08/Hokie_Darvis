@@ -403,7 +403,7 @@ function CategoryView({ category, onBack, onOpenPost, onNewPost, darkMode, curre
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, gap: 16 }}>
           <div>
-            <div style={{ marginBottom: 8, color: subtext }}><category.Icon size={22} /></div>
+            <div style={{ marginBottom: 8, color: sub }}><category.Icon size={22} /></div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: head, letterSpacing: "-0.4px" }}>{category.title}</h1>
             <p style={{ margin: "6px 0 0", fontSize: 14, color: sub }}>{category.description}</p>
           </div>
@@ -428,7 +428,7 @@ function CategoryView({ category, onBack, onOpenPost, onNewPost, darkMode, curre
             background: cardBg, border: `1px solid ${border}`,
             borderRadius: 14, padding: "48px 32px", textAlign: "center",
           }}>
-            <div style={{ marginBottom: 12, display: "flex", justifyContent: "center", color: subtext }}><category.Icon size={28} /></div>
+            <div style={{ marginBottom: 12, display: "flex", justifyContent: "center", color: sub }}><category.Icon size={28} /></div>
             <div style={{ color: head, fontWeight: 700, marginBottom: 6 }}>No posts yet</div>
             <div style={{ color: sub, fontSize: 14 }}>Be the first to start a discussion in {category.title}.</div>
           </div>
