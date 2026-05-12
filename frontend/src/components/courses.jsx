@@ -327,6 +327,7 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   const dm = darkMode;
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(true);
+  const [showAllProfs, setShowAllProfs] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 700);
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 700);
@@ -338,6 +339,7 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   useEffect(() => {
     setDetailLoading(true);
     setDetail(null);
+    setShowAllProfs(false);
     API.getCourse(course.subject, course.number)
       .then(d => { setDetail(d); setDetailLoading(false); })
       .catch(() => setDetailLoading(false));
@@ -449,9 +451,12 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
         {/* Professors — compact list */}
         {profs.length > 0 && (
           <div style={{ padding: isMobile ? "14px 20px" : "16px 32px", borderBottom: `1px solid ${colors.border}` }}>
-            <h3 style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>Instructors</h3>
+            <h3 style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+              Instructors
+              <span style={{ marginLeft: 6, fontWeight: 600, textTransform: "none", letterSpacing: 0, color: colors.sub, opacity: 0.7 }}>({profs.length})</span>
+            </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              {profs.map((prof, i) => (
+              {(showAllProfs ? profs : profs.slice(0, 3)).map((prof) => (
                 <button key={prof.id} onClick={() => onProfClick(prof)} style={{
                   display: "flex", alignItems: "center", gap: 10,
                   padding: "7px 10px", margin: 0,
@@ -462,7 +467,7 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
                 onMouseEnter={e => e.currentTarget.style.background = dm ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                 >
-                  {/* Avatar initial */}
+                  {/* Avatar */}
                   <div style={{
                     width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
                     background: `hsl(${(prof.name.charCodeAt(0) * 37) % 360}, 55%, 42%)`,
@@ -490,6 +495,29 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
                 </button>
               ))}
             </div>
+
+            {/* Show more / less toggle */}
+            {profs.length > 3 && (
+              <button
+                onClick={() => setShowAllProfs(v => !v)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  marginTop: 4, padding: "6px 10px",
+                  background: "transparent", border: "none", borderRadius: 8,
+                  cursor: "pointer", color: "#861F41",
+                  fontWeight: 700, fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = dm ? "rgba(134,31,65,0.12)" : "rgba(134,31,65,0.06)"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                <span style={{ fontSize: 14, lineHeight: 1 }}>{showAllProfs ? "▲" : "▼"}</span>
+                {showAllProfs
+                  ? "Show fewer instructors"
+                  : `Show ${profs.length - 3} more instructor${profs.length - 3 === 1 ? "" : "s"}`
+                }
+              </button>
+            )}
           </div>
         )}
 
