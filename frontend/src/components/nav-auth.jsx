@@ -1,6 +1,6 @@
 // Nav component — dark minimal
 import { useState } from "react";
-import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
+import { SignInButton, SignUpButton, SignedIn, SignedOut, useUser, useClerk } from "@clerk/clerk-react";
 
 // StarRating stays here since courses.jsx and dashboard-prof.jsx import it
 export function StarRating({ rating, max = 5, size = 14 }) {
@@ -26,6 +26,8 @@ export function StarRating({ rating, max = 5, size = 14 }) {
 }
 
 export default function Nav({ page, setPage, schedule, darkMode = true, setDarkMode }) {
+  const { signOut } = useClerk();
+  const { user } = useUser();
   const navLinks = [
     { id: "search",   label: "Browse Courses" },
     { id: "schedule", label: "Schedule Builder" },
@@ -208,29 +210,51 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
 
           <SignedIn>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {/* Avatar → profile page */}
               <button
                 onClick={() => setPage("profile")}
+                title="Your profile"
+                style={{
+                  background: "none", border: "none", cursor: "pointer", padding: 0,
+                  borderRadius: "50%",
+                  outline: page === "profile" ? "2px solid #861F41" : "2px solid transparent",
+                  outlineOffset: 2,
+                  transition: "outline-color 0.15s",
+                  display: "flex", alignItems: "center",
+                }}
+              >
+                {user?.imageUrl ? (
+                  <img
+                    src={user.imageUrl}
+                    alt="Profile"
+                    style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", display: "block" }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 30, height: 30, borderRadius: "50%",
+                    background: "#f0c050", color: "#861F41",
+                    fontWeight: 900, fontSize: 11,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {([user?.firstName, user?.lastName].filter(Boolean).map(n => n[0]).join("") || user?.username?.[0] || "?").toUpperCase()}
+                  </div>
+                )}
+              </button>
+              {/* Sign out */}
+              <button
+                onClick={() => signOut()}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
-                  color: page === "profile" ? (darkMode ? "white" : "#1a1210") : metaColor,
-                  fontSize: 13, fontWeight: page === "profile" ? 700 : 500,
+                  color: metaColor, fontSize: 12, fontWeight: 600,
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  padding: "4px 8px", borderRadius: 6,
+                  padding: "4px 6px", borderRadius: 6,
                   transition: "color 0.15s",
                 }}
-                onMouseEnter={e => e.currentTarget.style.color = darkMode ? "white" : "#1a1210"}
-                onMouseLeave={e => e.currentTarget.style.color = page === "profile" ? (darkMode ? "white" : "#1a1210") : metaColor}
+                onMouseEnter={e => e.currentTarget.style.color = darkMode ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.55)"}
+                onMouseLeave={e => e.currentTarget.style.color = metaColor}
               >
-                Profile
+                Sign out
               </button>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: { width: 30, height: 30 },
-                  },
-                }}
-              />
             </div>
           </SignedIn>
         </div>
