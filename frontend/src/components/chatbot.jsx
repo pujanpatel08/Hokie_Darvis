@@ -231,9 +231,37 @@ function TableWidget({ table, darkMode }) {
 }
 
 // ── Bot message ───────────────────────────────────────────────────
-function BotMessage({ msg, darkMode }) {
+function BotMessage({ msg, darkMode, question, onRetry }) {
   const dm = darkMode;
   const [chartsOpen, setChartsOpen] = useState(false);
+  const [copied, setCopied]         = useState(false);
+
+  const handleCopy = () => {
+    const text = [
+      question ? `Q: ${question}` : null,
+      `A: ${msg.answer}`,
+      ...(msg.tables || []).map(t => {
+        if (!t?.rows?.length) return null;
+        const header = t.columns.join(" | ");
+        const rows   = t.rows.map(r => t.columns.map(c => r[c] ?? "—").join(" | "));
+        return [t.title, header, ...rows].join("\n");
+      }),
+    ].filter(Boolean).join("\n\n");
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  };
+
+  const btnBase = {
+    background: "none",
+    border: `1px solid ${dm ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)"}`,
+    borderRadius: 20, padding: "3px 11px",
+    color: dm ? "rgba(255,255,255,0.38)" : "rgba(0,0,0,0.38)",
+    fontSize: 11, fontWeight: 600, cursor: "pointer",
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    transition: "all 0.15s",
+  };
 
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0, width: "100%" }}>
@@ -249,8 +277,12 @@ function BotMessage({ msg, darkMode }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Answer text */}
         <div style={{
-          background: dm ? "rgba(255,255,255,0.04)" : "white",
-          border: `1px solid ${dm ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+          background: msg.isError
+            ? (dm ? "rgba(248,113,113,0.06)" : "rgba(220,38,38,0.04)")
+            : (dm ? "rgba(255,255,255,0.04)" : "white"),
+          border: `1px solid ${msg.isError
+            ? (dm ? "rgba(248,113,113,0.20)" : "rgba(220,38,38,0.15)")
+            : (dm ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)")}`,
           borderRadius: "4px 14px 14px 14px",
           padding: "14px 16px",
           color: dm ? "#f0edf3" : "#1a1210",
@@ -293,6 +325,28 @@ function BotMessage({ msg, darkMode }) {
             ))}
           </div>
         )}
+
+        {/* Action row — copy + retry */}
+        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+          <button
+            onClick={handleCopy}
+            style={{ ...btnBase, color: copied ? "#861F41" : btnBase.color, borderColor: copied ? "rgba(134,31,65,0.35)" : btnBase.borderColor }}
+            onMouseEnter={e => { e.currentTarget.style.color = dm ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.6)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = copied ? "#861F41" : (dm ? "rgba(255,255,255,0.38)" : "rgba(0,0,0,0.38)"); }}
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
+          {(msg.isError || onRetry) && question && (
+            <button
+              onClick={() => onRetry(question)}
+              style={btnBase}
+              onMouseEnter={e => { e.currentTarget.style.color = "#861F41"; e.currentTarget.style.borderColor = "rgba(134,31,65,0.35)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = dm ? "rgba(255,255,255,0.38)" : "rgba(0,0,0,0.38)"; e.currentTarget.style.borderColor = dm ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)"; }}
+            >
+              ↺ Retry
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -608,11 +662,12 @@ export default function ChatbotPage({ darkMode }) {
       setServerDown(isNetwork);
       const errMsg = {
         role: "bot",
+        isError: true,
         answer: isTimeout
-          ? "The request timed out. If the server was inactive, Render's free tier takes about 30 seconds to spin up. Try again in a moment."
+          ? "The request timed out. Render's free tier takes ~30 seconds to spin up after inactivity. Try again in a moment."
           : isNetwork
           ? "Couldn't reach the server. Check your connection or try again in ~30 seconds."
-          : `Something went wrong: ${err.message}`,
+          : `Something went wrong on the server. Try again — if it keeps failing, the question may need rephrasing.`,
         tables: [], charts: [], warnings: [],
       };
       const final = [...withUser, errMsg];
@@ -743,7 +798,13 @@ export default function ChatbotPage({ darkMode }) {
                     }}>{msg.content}</div>
                   </div>
                 ) : (
-                  <BotMessage key={i} msg={msg} darkMode={dm} />
+                  <BotMessage
+                    key={i}
+                    msg={msg}
+                    darkMode={dm}
+                    question={messages[i - 1]?.content}
+                    onRetry={send}
+                  />
                 )
               ))}
 
