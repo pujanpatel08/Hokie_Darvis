@@ -254,6 +254,13 @@ export default function LandingPage({ onEnter, darkMode }) {
   const statsRef  = useRef(null);
   const heroBgRef = useRef(null);
   const [statsActive, setStatsActive] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   injectStyles('lp-v4', LP_CSS);
   useReveal();
@@ -412,7 +419,7 @@ export default function LandingPage({ onEnter, darkMode }) {
         {/* Main hero text */}
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          maxWidth: 1200, margin: '0 auto', padding: '60px 64px 40px',
+          maxWidth: 1200, margin: '0 auto', padding: isMobile ? '48px 20px 32px' : '60px 64px 40px',
           width: '100%', boxSizing: 'border-box', position: 'relative', zIndex: 2,
         }}>
           {/* Label */}
@@ -466,9 +473,9 @@ export default function LandingPage({ onEnter, darkMode }) {
         <div style={{
           position: 'relative', zIndex: 2,
           maxWidth: 1200, margin: '0 auto', width: '100%',
-          padding: '0 64px 72px', boxSizing: 'border-box',
+          padding: isMobile ? '0 20px 48px' : '0 64px 72px', boxSizing: 'border-box',
         }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: 8 }}>
             {previewCourses.map((c, i) => {
               const gpaCol = c.gpa >= 3.3 ? '#4ade80' : c.gpa >= 3.0 ? '#86efac' : c.gpa >= 2.7 ? '#fbbf24' : '#f87171';
               return (
@@ -494,8 +501,8 @@ export default function LandingPage({ onEnter, darkMode }) {
       </section>
 
       {/* ── STATS ────────────────────────────────────────────────────────────── */}
-      <section ref={statsRef} style={{ padding: '80px 64px', maxWidth: 1200, margin: '0 auto', boxSizing: 'border-box' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0 }}>
+      <section ref={statsRef} style={{ padding: isMobile ? '48px 20px' : '80px 64px', maxWidth: 1200, margin: '0 auto', boxSizing: 'border-box' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 0 }}>
           {stats.map((s, i) => (
             <div key={i} className={`lp-fade d${i + 1}`} style={{
               borderTop: `1px solid ${t.sectionLine}`,
@@ -519,9 +526,9 @@ export default function LandingPage({ onEnter, darkMode }) {
       </section>
 
       {/* ── FEATURES ─────────────────────────────────────────────────────────── */}
-      <section style={{ padding: '100px 64px 120px', maxWidth: 1200, margin: '0 auto', boxSizing: 'border-box' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr', gap: 80, alignItems: 'start' }}>
-          <div style={{ position: 'sticky', top: 100 }}>
+      <section style={{ padding: isMobile ? '60px 20px 72px' : '100px 64px 120px', maxWidth: 1200, margin: '0 auto', boxSizing: 'border-box' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.8fr', gap: isMobile ? 32 : 80, alignItems: 'start' }}>
+          <div style={{ position: isMobile ? 'static' : 'sticky', top: 100 }}>
             <span className="lp-clip">
               <span className="lp-line" style={{
                 display: 'block', fontSize: 10, fontWeight: 900,
@@ -559,8 +566,8 @@ export default function LandingPage({ onEnter, darkMode }) {
       </section>
 
       {/* ── GRADE DATA ───────────────────────────────────────────────────────── */}
-      <section style={{ background: gradeBg, padding: '120px 64px', boxSizing: 'border-box' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
+      <section style={{ background: gradeBg, padding: isMobile ? '60px 20px' : '120px 64px', boxSizing: 'border-box' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 36 : 80, alignItems: 'center' }}>
           <div>
             <span className="lp-clip">
               <span className="lp-line" style={{
@@ -591,7 +598,7 @@ export default function LandingPage({ onEnter, darkMode }) {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────────── */}
-      <section style={{ padding: '160px 64px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ padding: isMobile ? '80px 20px' : '160px 64px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(134,31,65,0.08) 0%, transparent 70%)',
@@ -625,8 +632,9 @@ export default function LandingPage({ onEnter, darkMode }) {
       {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
       <footer style={{
         borderTop: `1px solid ${t.sectionLineSoft}`,
-        padding: '24px 64px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: isMobile ? '20px 20px' : '24px 64px',
+        display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between', alignItems: 'center', gap: isMobile ? 6 : 0,
         background: footerBg,
       }}>
         <span style={{ fontWeight: 900, fontSize: 14, color: t.textSub, letterSpacing: '-0.5px' }}>Darvis</span>

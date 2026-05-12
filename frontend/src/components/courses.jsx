@@ -710,7 +710,7 @@ function SubjectSearch({ subjects, selected, onChange, darkMode, c }) {
 
 // ── FilterPanel ───────────────────────────────────────────────────
 // Minimal: no surrounding card, hairline section dividers, transparent inputs.
-function FilterPanel({ filters, setFilters, darkMode, subjects }) {
+function FilterPanel({ filters, setFilters, darkMode, subjects, isMobile }) {
   const dm = darkMode;
   const c = dm ? {
     text:     "#f0edf3",
@@ -737,7 +737,7 @@ function FilterPanel({ filters, setFilters, darkMode, subjects }) {
   return (
     <div style={{
       fontFamily: "'Plus Jakarta Sans', sans-serif",
-      position: "sticky", top: 80, maxHeight: "calc(100vh - 120px)", overflowY: "auto",
+      ...(isMobile ? {} : { position: "sticky", top: 80, maxHeight: "calc(100vh - 120px)", overflowY: "auto" }),
       paddingRight: 8,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingBottom: 14 }}>
@@ -862,7 +862,8 @@ export default function CourseSearch({ darkMode, schedule, onCourseClick, onProf
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ subjects: [], minGpa: "", maxDiff: "", minCredits: "", maxCredits: "", pathway: "", days: [] });
   const [sort, setSort] = useState("subject");
-  const [showFilters, setShowFilters] = useState(true);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [showFilters, setShowFilters] = useState(() => window.innerWidth >= 768);
   const [courses, setCourses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -870,6 +871,15 @@ export default function CourseSearch({ darkMode, schedule, onCourseClick, onProf
   const debounceRef = useRef(null);
   const topRef = useRef(null);
   const dm = darkMode;
+
+  useEffect(() => {
+    const handler = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   // Load subject list once on mount
   useEffect(() => {
@@ -954,7 +964,7 @@ export default function CourseSearch({ darkMode, schedule, onCourseClick, onProf
       {/* ── HEADER ────────────────────────────────────────────────────────────── */}
       <header style={{
         maxWidth: 1280, margin: "0 auto",
-        padding: "72px 64px 36px", boxSizing: "border-box",
+        padding: isMobile ? "36px 16px 24px" : "72px 64px 36px", boxSizing: "border-box",
         borderBottom: `1px solid ${c.divider}`,
       }}>
         {/* Eyebrow */}
@@ -1007,15 +1017,20 @@ export default function CourseSearch({ darkMode, schedule, onCourseClick, onProf
       {/* ── BODY ──────────────────────────────────────────────────────────────── */}
       <div ref={topRef} style={{
         maxWidth: 1280, margin: "0 auto",
-        padding: "40px 64px 96px", boxSizing: "border-box",
+        padding: isMobile ? "20px 16px 60px" : "40px 64px 96px", boxSizing: "border-box",
         display: "grid",
-        gridTemplateColumns: showFilters ? "220px 1fr" : "1fr",
+        gridTemplateColumns: (!isMobile && showFilters) ? "220px 1fr" : "1fr",
         gap: 56, alignItems: "start",
       }}>
 
-        {/* Filter sidebar */}
-        {showFilters && (
-          <FilterPanel filters={filters} setFilters={setFilters} darkMode={dm} subjects={subjects} />
+        {/* Filter sidebar — desktop always, mobile only when toggled */}
+        {(!isMobile && showFilters) && (
+          <FilterPanel filters={filters} setFilters={setFilters} darkMode={dm} subjects={subjects} isMobile={false} />
+        )}
+        {(isMobile && showFilters) && (
+          <div style={{ marginBottom: 16 }}>
+            <FilterPanel filters={filters} setFilters={setFilters} darkMode={dm} subjects={subjects} isMobile={true} />
+          </div>
         )}
 
         {/* Main content */}
@@ -1023,7 +1038,11 @@ export default function CourseSearch({ darkMode, schedule, onCourseClick, onProf
 
           {/* Toolbar */}
           <div style={{
-            display: "flex", justifyContent: "space-between", alignItems: "center",
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            justifyContent: "space-between",
+            alignItems: isMobile ? "flex-start" : "center",
+            gap: isMobile ? 12 : 0,
             paddingBottom: 18, marginBottom: 24,
             borderBottom: `1px solid ${c.divider}`,
           }}>

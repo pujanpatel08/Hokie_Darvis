@@ -308,9 +308,16 @@ export default function ChatbotPage({ darkMode }) {
   const [minStudents, setMinStudents] = useState(30);
   const [topN,        setTopN]        = useState(10);
   const [showSettings, setShowSettings] = useState(false);
+  const [isMobile,    setIsMobile]    = useState(() => window.innerWidth < 768);
   const bottomRef  = useRef(null);
   const inputRef   = useRef(null);
   const dm = darkMode;
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   const c = dm ? {
     bg:      "#0a0a0a",
@@ -403,35 +410,35 @@ export default function ChatbotPage({ darkMode }) {
         <div style={{
           flex: 1, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
-          padding: "60px 24px 200px",
+          padding: isMobile ? "40px 16px 160px" : "60px 24px 200px",
         }}>
           <div style={{
             fontSize: 10, fontWeight: 900, color: "#861F41",
             letterSpacing: "2.5px", textTransform: "uppercase", marginBottom: 20,
           }}>Darvis AI</div>
           <h1 style={{
-            margin: "0 0 12px", fontSize: "clamp(28px, 4vw, 48px)",
+            margin: "0 0 12px", fontSize: isMobile ? "clamp(28px, 8vw, 38px)" : "clamp(28px, 4vw, 48px)",
             fontWeight: 900, color: c.text, letterSpacing: "-2px", textAlign: "center",
           }}>
             Ask about <span style={{ color: "#861F41" }}>any course.</span>
           </h1>
           <p style={{
-            margin: "0 0 40px", fontSize: 15, color: c.sub,
+            margin: "0 0 32px", fontSize: isMobile ? 14 : 15, color: c.sub,
             maxWidth: 440, textAlign: "center", lineHeight: 1.7,
           }}>
             Grade distributions, professor comparisons, and historical trends. All from real institutional data.
           </p>
 
           {/* Suggested questions */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 600 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: isMobile ? "100%" : 600 }}>
             {SUGGESTED.map(q => (
               <button key={q} onClick={() => send(q)} style={{
                 background: c.surface,
                 border: `1px solid ${c.border}`,
-                borderRadius: 20, padding: "8px 16px",
-                color: c.sub, fontSize: 13, fontWeight: 600,
+                borderRadius: 20, padding: "8px 14px",
+                color: c.sub, fontSize: isMobile ? 12 : 13, fontWeight: 600,
                 cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
-                transition: "all 0.15s ease",
+                transition: "all 0.15s ease", textAlign: "left",
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "#861F41"; e.currentTarget.style.color = "#861F41"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = c.border; e.currentTarget.style.color = c.sub; }}
@@ -443,8 +450,8 @@ export default function ChatbotPage({ darkMode }) {
 
       {/* ── Messages ────────────────────────────────────────────── */}
       {!isEmpty && (
-        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "32px 0 24px", width: "100%" }}>
-          <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px", display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: isMobile ? "16px 0 16px" : "32px 0 24px", width: "100%" }}>
+          <div style={{ maxWidth: 760, margin: "0 auto", padding: isMobile ? "0 12px" : "0 24px", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
             {messages.map((msg, i) => (
               msg.role === "user" ? (
                 <div key={i} style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -497,7 +504,7 @@ export default function ChatbotPage({ darkMode }) {
         position: "sticky", bottom: 0,
         background: c.bg,
         borderTop: `1px solid ${c.border}`,
-        padding: "16px 24px 20px",
+        padding: isMobile ? "10px 12px 16px" : "16px 24px 20px",
       }}>
         <div style={{ maxWidth: 760, margin: "0 auto" }}>
 

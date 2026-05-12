@@ -1,5 +1,5 @@
 // Nav component — dark minimal
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SignInButton, SignUpButton, SignedIn, SignedOut, useUser, useClerk } from "@clerk/clerk-react";
 
 // StarRating stays here since courses.jsx and dashboard-prof.jsx import it
@@ -28,6 +28,18 @@ export function StarRating({ rating, max = 5, size = 14 }) {
 export default function Nav({ page, setPage, schedule, darkMode = true, setDarkMode }) {
   const { signOut } = useClerk();
   const { user } = useUser();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  // Close menu on page change
+  useEffect(() => { setMenuOpen(false); }, [page]);
+
   const navLinks = [
     { id: "search",   label: "Browse Courses" },
     { id: "schedule", label: "Schedule Builder" },
@@ -64,7 +76,22 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
     </svg>
   );
 
+  const HamburgerIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="2" y="5"  width="16" height="1.8" rx="1" fill="currentColor"/>
+      <rect x="2" y="9.1" width="16" height="1.8" rx="1" fill="currentColor"/>
+      <rect x="2" y="13.2" width="16" height="1.8" rx="1" fill="currentColor"/>
+    </svg>
+  );
+  const CloseIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <line x1="4" y1="4" x2="16" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="16" y1="4" x2="4" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  );
+
   return (
+    <>
     <nav style={{
       position: "sticky", top: 0, zIndex: 200,
       background: navBg,
@@ -76,14 +103,14 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
     }}>
       <div style={{
         maxWidth: 1200, margin: "0 auto",
-        padding: "0 64px", height: 60,
+        padding: isMobile ? "0 16px" : "0 64px", height: 60,
         display: "flex", alignItems: "center", gap: 0,
         boxSizing: "border-box",
       }}>
         {/* Logo */}
         <button onClick={() => setPage("landing")} style={{
           background: "none", border: "none", cursor: "pointer",
-          padding: 0, marginRight: 48,
+          padding: 0, marginRight: isMobile ? 0 : 48,
           display: "flex", alignItems: "center", gap: 10,
         }}>
           <img src={darkMode ? "/logo.svg" : "/logo-light.svg"} alt="Darvis" style={{ width: 26, height: 26 }} />
@@ -95,56 +122,61 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
           </span>
         </button>
 
-        {/* Nav links */}
-        <div style={{ display: "flex", gap: 4, flex: 1 }}>
-          {navLinks.map(link => (
-            <button key={link.id} onClick={() => setPage(link.id)} style={{
-              background: "none", border: "none",
-              color: page === link.id ? linkActive : link.soon ? linkSoon : linkDefault,
-              padding: "6px 14px", cursor: "pointer",
-              fontWeight: page === link.id ? 700 : 500,
-              fontSize: 14,
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              transition: "color 0.15s",
-              borderRadius: 7,
-              position: "relative",
-              display: "flex", alignItems: "center", gap: 7,
-            }}
-            onMouseEnter={e => {
-              if (!link.soon || page === link.id) e.currentTarget.style.color = linkActive;
-              else e.currentTarget.style.color = darkMode ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.color = page === link.id ? linkActive : link.soon ? linkSoon : linkDefault;
-            }}
-            >
-              {link.label}
-              {link.soon && (
-                <span style={{
-                  fontSize: 9, fontWeight: 800, letterSpacing: "0.5px",
-                  background: "rgba(134,31,65,0.25)", color: "#861F41",
-                  borderRadius: 5, padding: "2px 5px", textTransform: "uppercase",
-                }}>Soon</span>
-              )}
-              {link.id === "schedule" && schedule.length > 0 && (
-                <span style={{
-                  background: "#861F41", color: "white",
-                  borderRadius: 10, padding: "1px 7px", fontSize: 11, fontWeight: 800,
-                }}>{schedule.length}</span>
-              )}
-              {page === link.id && (
-                <span style={{
-                  position: "absolute", bottom: -1, left: "50%",
-                  transform: "translateX(-50%)",
-                  width: 20, height: 2, background: "#861F41", borderRadius: 2,
-                }} />
-              )}
-            </button>
-          ))}
-        </div>
+        {/* Desktop nav links */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 4, flex: 1 }}>
+            {navLinks.map(link => (
+              <button key={link.id} onClick={() => setPage(link.id)} style={{
+                background: "none", border: "none",
+                color: page === link.id ? linkActive : link.soon ? linkSoon : linkDefault,
+                padding: "6px 14px", cursor: "pointer",
+                fontWeight: page === link.id ? 700 : 500,
+                fontSize: 14,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                transition: "color 0.15s",
+                borderRadius: 7,
+                position: "relative",
+                display: "flex", alignItems: "center", gap: 7,
+              }}
+              onMouseEnter={e => {
+                if (!link.soon || page === link.id) e.currentTarget.style.color = linkActive;
+                else e.currentTarget.style.color = darkMode ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = page === link.id ? linkActive : link.soon ? linkSoon : linkDefault;
+              }}
+              >
+                {link.label}
+                {link.soon && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, letterSpacing: "0.5px",
+                    background: "rgba(134,31,65,0.25)", color: "#861F41",
+                    borderRadius: 5, padding: "2px 5px", textTransform: "uppercase",
+                  }}>Soon</span>
+                )}
+                {link.id === "schedule" && schedule.length > 0 && (
+                  <span style={{
+                    background: "#861F41", color: "white",
+                    borderRadius: 10, padding: "1px 7px", fontSize: 11, fontWeight: 800,
+                  }}>{schedule.length}</span>
+                )}
+                {page === link.id && (
+                  <span style={{
+                    position: "absolute", bottom: -1, left: "50%",
+                    transform: "translateX(-50%)",
+                    width: 20, height: 2, background: "#861F41", borderRadius: 2,
+                  }} />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* Right: theme toggle + auth */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        {/* Spacer on mobile */}
+        {isMobile && <div style={{ flex: 1 }} />}
+
+        {/* Right: theme toggle + auth (desktop) or just avatar + hamburger (mobile) */}
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 10 : 14 }}>
           {setDarkMode && (
             <button
               onClick={() => setDarkMode(m => !m)}
@@ -168,83 +200,161 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
             </button>
           )}
 
-          <div style={{ fontSize: 11, color: metaColor, fontWeight: 600, letterSpacing: "0.5px" }}>
-            {new Date().getFullYear()}
-          </div>
+          {!isMobile && (
+            <div style={{ fontSize: 11, color: metaColor, fontWeight: 600, letterSpacing: "0.5px" }}>
+              {new Date().getFullYear()}
+            </div>
+          )}
 
           {/* Auth */}
           <SignedOut>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <SignUpButton mode="modal">
-                <button style={{
-                  background: "rgba(255,255,255,0.06)",
-                  color: darkMode ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.55)",
-                  border: `1.5px solid ${darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
-                  borderRadius: 8, padding: "6px 14px",
-                  fontWeight: 600, fontSize: 13, cursor: "pointer",
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}
-                onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                >
-                  Sign up
-                </button>
-              </SignUpButton>
+            {isMobile ? (
               <SignInButton mode="modal">
                 <button style={{
                   background: "#861F41", color: "white", border: "none",
-                  borderRadius: 8, padding: "6px 16px",
+                  borderRadius: 8, padding: "6px 14px",
                   fontWeight: 700, fontSize: 13, cursor: "pointer",
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  transition: "opacity 0.15s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
-                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-                >
-                  Sign in
-                </button>
+                }}>Sign in</button>
               </SignInButton>
-            </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <SignUpButton mode="modal">
+                  <button style={{
+                    background: "rgba(255,255,255,0.06)",
+                    color: darkMode ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.55)",
+                    border: `1.5px solid ${darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
+                    borderRadius: 8, padding: "6px 14px",
+                    fontWeight: 600, fontSize: 13, cursor: "pointer",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                  >Sign up</button>
+                </SignUpButton>
+                <SignInButton mode="modal">
+                  <button style={{
+                    background: "#861F41", color: "white", border: "none",
+                    borderRadius: 8, padding: "6px 16px",
+                    fontWeight: 700, fontSize: 13, cursor: "pointer",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    transition: "opacity 0.15s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+                  onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                  >Sign in</button>
+                </SignInButton>
+              </div>
+            )}
           </SignedOut>
 
           <SignedIn>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              {/* Avatar → profile page */}
-              <button
-                onClick={() => setPage("profile")}
-                title="Your profile"
-                style={{
-                  background: "none", border: "none", cursor: "pointer", padding: 0,
-                  borderRadius: 7,
-                  outline: page === "profile" ? "2px solid #861F41" : "2px solid transparent",
-                  outlineOffset: 2,
-                  transition: "outline-color 0.15s",
-                  display: "flex", alignItems: "center",
-                }}
-              >
-                {user?.imageUrl ? (
-                  <img
-                    src={user.imageUrl}
-                    alt="Profile"
-                    style={{ width: 30, height: 30, borderRadius: 7, objectFit: "cover", display: "block" }}
-                  />
-                ) : (
-                  <div style={{
-                    width: 30, height: 30, borderRadius: 7,
-                    background: "linear-gradient(135deg, #6b1833 0%, #861F41 55%, #b03060 100%)", color: "white",
-                    fontWeight: 900, fontSize: 11,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    {([user?.firstName, user?.lastName].filter(Boolean).map(n => n[0]).join("") || user?.username?.[0] || "?").toUpperCase()}
-                  </div>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={() => setPage("profile")}
+              title="Your profile"
+              style={{
+                background: "none", border: "none", cursor: "pointer", padding: 0,
+                borderRadius: 7,
+                outline: page === "profile" ? "2px solid #861F41" : "2px solid transparent",
+                outlineOffset: 2,
+                transition: "outline-color 0.15s",
+                display: "flex", alignItems: "center",
+              }}
+            >
+              {user?.imageUrl ? (
+                <img src={user.imageUrl} alt="Profile"
+                  style={{ width: 30, height: 30, borderRadius: 7, objectFit: "cover", display: "block" }} />
+              ) : (
+                <div style={{
+                  width: 30, height: 30, borderRadius: 7,
+                  background: "linear-gradient(135deg, #6b1833 0%, #861F41 55%, #b03060 100%)", color: "white",
+                  fontWeight: 900, fontSize: 11,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {([user?.firstName, user?.lastName].filter(Boolean).map(n => n[0]).join("") || user?.username?.[0] || "?").toUpperCase()}
+                </div>
+              )}
+            </button>
           </SignedIn>
+
+          {/* Hamburger (mobile only) */}
+          {isMobile && (
+            <button
+              onClick={() => setMenuOpen(o => !o)}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                color: darkMode ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
+                padding: 6, borderRadius: 7, display: "flex", alignItems: "center",
+              }}
+            >
+              {menuOpen ? <CloseIcon /> : <HamburgerIcon />}
+            </button>
+          )}
         </div>
       </div>
     </nav>
+
+    {/* Mobile dropdown menu */}
+    {isMobile && menuOpen && (
+      <div style={{
+        position: "fixed", top: 60, left: 0, right: 0, zIndex: 199,
+        background: navBg, backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)",
+        borderBottom: `1px solid ${navBorder}`,
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        padding: "8px 16px 16px",
+      }}>
+        {navLinks.map(link => (
+          <button
+            key={link.id}
+            onClick={() => { setPage(link.id); setMenuOpen(false); }}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              width: "100%", background: "none", border: "none", cursor: "pointer",
+              color: page === link.id ? "#861F41" : (darkMode ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.7)"),
+              padding: "14px 4px",
+              fontWeight: page === link.id ? 700 : 500, fontSize: 16,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              borderBottom: `1px solid ${navBorder}`,
+              textAlign: "left",
+            }}
+          >
+            <span>{link.label}</span>
+            {link.id === "schedule" && schedule.length > 0 && (
+              <span style={{
+                background: "#861F41", color: "white",
+                borderRadius: 10, padding: "1px 8px", fontSize: 11, fontWeight: 800,
+              }}>{schedule.length}</span>
+            )}
+            {page === link.id && (
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#861F41" }} />
+            )}
+          </button>
+        ))}
+        <SignedOut>
+          <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+            <SignUpButton mode="modal">
+              <button style={{
+                flex: 1, background: "rgba(255,255,255,0.06)",
+                color: darkMode ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
+                border: `1.5px solid ${darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
+                borderRadius: 10, padding: "10px", fontWeight: 600, fontSize: 14,
+                cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}>Sign up</button>
+            </SignUpButton>
+            <SignInButton mode="modal">
+              <button style={{
+                flex: 1, background: "#861F41", color: "white", border: "none",
+                borderRadius: 10, padding: "10px",
+                fontWeight: 700, fontSize: 14, cursor: "pointer",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}>Sign in</button>
+            </SignInButton>
+          </div>
+        </SignedOut>
+      </div>
+    )}
+    </>
   );
 }
 

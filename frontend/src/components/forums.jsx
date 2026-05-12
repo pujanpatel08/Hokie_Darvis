@@ -1,5 +1,5 @@
 // Forums — fully connected to Supabase
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { db } from "../supabase.js";
 import { BookIcon, UserIcon, CalendarIcon, GraduationCapIcon, LightbulbIcon, BellIcon } from "./icons.jsx";
@@ -65,9 +65,10 @@ function NewPostModal({ onClose, onSubmit, saving, darkMode, defaultCategory = "
       <div style={{
         background: bg, border: `1.5px solid ${border}`,
         borderRadius: 20, width: "100%", maxWidth: 560,
-        padding: "36px 36px 32px",
+        padding: window.innerWidth < 768 ? "24px 20px 20px" : "36px 36px 32px",
         boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
         position: "relative",
+        maxHeight: "90vh", overflowY: "auto",
       }}>
         <button onClick={onClose} style={{
           position: "absolute", top: 14, right: 16,
@@ -211,9 +212,10 @@ function PostThread({ post, onBack, darkMode, currentUser }) {
     }
   };
 
+  const [isMobileThread] = useState(() => window.innerWidth < 768);
   return (
     <div style={{ background: bg, minHeight: "calc(100vh - 60px)", fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 80 }}>
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "40px 48px 0" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: isMobileThread ? "24px 16px 0" : "40px 48px 0" }}>
 
         {/* Back */}
         <button onClick={onBack} style={{
@@ -388,9 +390,10 @@ function CategoryView({ category, onBack, onOpenPost, onNewPost, darkMode, curre
     }
   };
 
+  const [isMobileCat] = useState(() => window.innerWidth < 768);
   return (
     <div style={{ background: bg, minHeight: "calc(100vh - 60px)", fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 80 }}>
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "40px 48px 0" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: isMobileCat ? "24px 16px 0" : "40px 48px 0" }}>
 
         <button onClick={onBack} style={{
           background: "none", border: "none", cursor: "pointer",
@@ -596,12 +599,19 @@ export default function ForumsPage({ darkMode = true, setPage }) {
   }
 
   // ── Index view ──────────────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
   return (
     <div style={{ background: bg, minHeight: "100vh", color: text, fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 80, transition: "background 0.3s" }}>
 
       {/* Header */}
-      <div style={{ borderBottom: `1px solid ${border}`, padding: "48px 0 40px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 48px" }}>
+      <div style={{ borderBottom: `1px solid ${border}`, padding: isMobile ? "28px 0 24px" : "48px 0 40px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "0 16px" : "0 48px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
             <div>
               <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.5px", color: head }}>Forums</h1>
@@ -638,8 +648,8 @@ export default function ForumsPage({ darkMode = true, setPage }) {
       </div>
 
       <div style={{
-        maxWidth: 1100, margin: "0 auto", padding: "40px 48px 0",
-        display: "grid", gridTemplateColumns: "1fr 340px", gap: 40, alignItems: "start",
+        maxWidth: 1100, margin: "0 auto", padding: isMobile ? "24px 16px 0" : "40px 48px 0",
+        display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 340px", gap: isMobile ? 32 : 40, alignItems: "start",
       }}>
 
         {/* Left: categories */}

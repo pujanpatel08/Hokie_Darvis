@@ -1,5 +1,5 @@
 // Schedule Builder component
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MOCK } from "../mock-data.js";
 import { ClockIcon, MapPinIcon, UserIcon, AlertTriangleIcon, CalendarIcon, GridIcon, ListIcon } from "./icons.jsx";
 
@@ -249,8 +249,18 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove, onCourseClick, o
 
 // ── Schedule Builder Page ─────────────────────────────────────────
 function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, onProfClick, setPage }) {
-  const [view, setView] = useState("grid");
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [view, setView] = useState(() => window.innerWidth < 768 ? "list" : "grid");
   const dm = darkMode;
+
+  useEffect(() => {
+    const handler = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
   const colors = {
     bg: "#0a0a0a",
     text: "#f0edf3",
@@ -268,16 +278,16 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
   return (
     <div style={{ background: colors.bg, minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
-      <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "32px 24px 28px" }}>
+      <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: isMobile ? "24px 16px 20px" : "32px 24px 28px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <h1 style={{ margin: "0 0 4px", color: "white", fontWeight: 800, fontSize: 26 }}>Schedule Builder</h1>
+          <h1 style={{ margin: "0 0 4px", color: "white", fontWeight: 800, fontSize: isMobile ? 22 : 26 }}>Schedule Builder</h1>
           <p style={{ margin: 0, color: "rgba(255,255,255,0.38)", fontSize: 14 }}>
             Fall 2025 · {sections.length} section{sections.length !== 1 ? "s" : ""} · {courseIds.length} course{courseIds.length !== 1 ? "s" : ""}
           </p>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "16px 16px 60px" : "24px" }}>
         {/* Conflict alert */}
         {conflict && (
           <div style={{
@@ -319,7 +329,11 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
             </div>
 
             {view === "grid" ? (
-              <ScheduleGrid sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} onCourseClick={onCourseClick} />
+              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                <div style={{ minWidth: 600 }}>
+                  <ScheduleGrid sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} onCourseClick={onCourseClick} />
+                </div>
+              </div>
             ) : (
               <ScheduleList sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} onCourseClick={onCourseClick} onProfClick={onProfClick} />
             )}

@@ -1,5 +1,5 @@
 // FAQs page
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function FaqsPage({ darkMode = true, setPage }) {
   const bg      = darkMode ? "#080808"                 : "#f7f4f0";
@@ -16,7 +16,14 @@ export default function FaqsPage({ darkMode = true, setPage }) {
   const plusBg  = darkMode ? "rgba(255,255,255,0.08)"  : "rgba(0,0,0,0.08)";
 
   const [open, setOpen] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const toggle = i => setOpen(open === i ? null : i);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   const sections = [
     {
@@ -114,8 +121,8 @@ export default function FaqsPage({ darkMode = true, setPage }) {
     <div style={{ background: bg, minHeight: "100vh", color: text, fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 80, transition: "background 0.3s, color 0.3s" }}>
 
       {/* Header */}
-      <div style={{ borderBottom: `1px solid ${border}`, padding: "48px 0 40px" }}>
-        <div style={{ maxWidth: 820, margin: "0 auto", padding: "0 48px" }}>
+      <div style={{ borderBottom: `1px solid ${border}`, padding: isMobile ? "32px 0 24px" : "48px 0 40px" }}>
+        <div style={{ maxWidth: 820, margin: "0 auto", padding: isMobile ? "0 16px" : "0 48px" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.5px", color: head }}>FAQs</h1>
           <p style={{ margin: "10px 0 0", color: subtext, fontSize: 15 }}>
             Common questions about Darvis, the grade data, and the AI.
@@ -124,7 +131,7 @@ export default function FaqsPage({ darkMode = true, setPage }) {
       </div>
 
       {/* Non-affiliation notice */}
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "32px 48px 0" }}>
+      <div style={{ maxWidth: 820, margin: "0 auto", padding: isMobile ? "20px 16px 0" : "32px 48px 0" }}>
         <div style={{
           background: darkMode ? "rgba(134,31,65,0.10)" : "rgba(134,31,65,0.06)",
           border: `1.5px solid rgba(134,31,65,0.30)`,
@@ -140,7 +147,7 @@ export default function FaqsPage({ darkMode = true, setPage }) {
       </div>
 
       {/* Accordion */}
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "32px 48px 0" }}>
+      <div style={{ maxWidth: 820, margin: "0 auto", padding: isMobile ? "24px 16px 0" : "32px 48px 0" }}>
         {sections.map((section, si) => (
           <div key={si} style={{ marginBottom: 40 }}>
             <h2 style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 700, color: subtext, textTransform: "uppercase", letterSpacing: "0.6px" }}>
