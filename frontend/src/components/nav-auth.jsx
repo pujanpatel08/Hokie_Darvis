@@ -1,6 +1,6 @@
 // Nav component — dark minimal
 import { useState } from "react";
-import { SignInButton, UserButton, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
 
 // StarRating stays here since courses.jsx and dashboard-prof.jsx import it
 export function StarRating({ rating, max = 5, size = 14 }) {
@@ -171,31 +171,66 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
 
           {/* Auth */}
           <SignedOut>
-            <SignInButton mode="modal">
-              <button style={{
-                background: "#861F41", color: "white", border: "none",
-                borderRadius: 8, padding: "6px 16px",
-                fontWeight: 700, fontSize: 13, cursor: "pointer",
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                transition: "opacity 0.15s",
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
-              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-              >
-                Sign in
-              </button>
-            </SignInButton>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <SignUpButton mode="modal">
+                <button style={{
+                  background: "rgba(255,255,255,0.06)",
+                  color: darkMode ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.55)",
+                  border: `1.5px solid ${darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
+                  borderRadius: 8, padding: "6px 14px",
+                  fontWeight: 600, fontSize: 13, cursor: "pointer",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}
+                onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                >
+                  Sign up
+                </button>
+              </SignUpButton>
+              <SignInButton mode="modal">
+                <button style={{
+                  background: "#861F41", color: "white", border: "none",
+                  borderRadius: 8, padding: "6px 16px",
+                  fontWeight: 700, fontSize: 13, cursor: "pointer",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  transition: "opacity 0.15s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                >
+                  Sign in
+                </button>
+              </SignInButton>
+            </div>
           </SignedOut>
 
           <SignedIn>
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  avatarBox: { width: 30, height: 30 },
-                },
-              }}
-            />
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button
+                onClick={() => setPage("profile")}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: page === "profile" ? (darkMode ? "white" : "#1a1210") : metaColor,
+                  fontSize: 13, fontWeight: page === "profile" ? 700 : 500,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  padding: "4px 8px", borderRadius: 6,
+                  transition: "color 0.15s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = darkMode ? "white" : "#1a1210"}
+                onMouseLeave={e => e.currentTarget.style.color = page === "profile" ? (darkMode ? "white" : "#1a1210") : metaColor}
+              >
+                Profile
+              </button>
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: { width: 30, height: 30 },
+                  },
+                }}
+              />
+            </div>
           </SignedIn>
         </div>
       </div>

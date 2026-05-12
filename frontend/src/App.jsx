@@ -9,8 +9,9 @@ import ChatbotPage from "./components/chatbot.jsx";
 import ForumsPage from "./components/forums.jsx";
 import FaqsPage from "./components/faqs.jsx";
 import ProfessorProfile from "./components/dashboard-prof.jsx";
-import AuthGate from "./components/auth-gate.jsx";
+import AuthModal from "./components/auth-modal.jsx";
 import ProfileModal from "./components/profile-modal.jsx";
+import ProfilePage from "./components/profile-page.jsx";
 
 // Pages that require authentication
 const PROTECTED = new Set(["search", "schedule", "chatbot", "forums"]);
@@ -30,6 +31,8 @@ export default function App() {
   const [selectedProf,   setSelectedProf]   = useState(null);
   const [profReturnPage, setProfReturnPage]  = useState("search");
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [pendingPage, setPendingPage] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Persist schedule and theme
   useEffect(() => {
@@ -47,6 +50,25 @@ export default function App() {
       if (!done) setShowProfileModal(true);
     }
   }, [isSignedIn, userLoaded, user]);
+
+  // After sign-in, navigate to the page the user originally tried to access
+  useEffect(() => {
+    if (isSignedIn && pendingPage) {
+      setPage(pendingPage);
+      setPendingPage(null);
+      setShowAuthModal(false);
+    }
+  }, [isSignedIn, pendingPage]);
+
+  // Intercepts navigation — shows auth modal instead of navigating if page is protected
+  const navigateTo = (newPage) => {
+    if (PROTECTED.has(newPage) && !isSignedIn) {
+      setPendingPage(newPage);
+      setShowAuthModal(true);
+    } else {
+      setPage(newPage);
+    }
+  };
 
   const addSection    = id => { if (!schedule.includes(id)) setSchedule(prev => [...prev, id]); };
   const removeSection = id => setSchedule(prev => prev.filter(x => x !== id));
@@ -85,22 +107,25 @@ export default function App() {
   }
 
   const renderPage = () => {
-    // Protected pages: show auth gate if not signed in
+    // If somehow on a protected page without being signed in, show landing
     if (PROTECTED.has(page) && !isSignedIn) {
-      return <AuthGate page={page} darkMode={darkMode} />;
+      return <LandingPage onEnter={() => navigateTo("search")} darkMode={darkMode} />;
     }
 
     if (page === "landing") {
-      return <LandingPage onEnter={() => setPage("search")} darkMode={darkMode} />;
+      return <LandingPage onEnter={() => navigateTo("search")} darkMode={darkMode} />;
+    }
+    if (page === "profile") {
+      return <ProfilePage darkMode={darkMode} setPage={navigateTo} />;
     }
     if (page === "chatbot") {
       return <ChatbotPage darkMode={darkMode} />;
     }
     if (page === "forums") {
-      return <ForumsPage darkMode={darkMode} setPage={setPage} />;
+      return <ForumsPage darkMode={darkMode} setPage={navigateTo} />;
     }
     if (page === "faqs") {
-      return <FaqsPage darkMode={darkMode} setPage={setPage} />;
+      return <FaqsPage darkMode={darkMode} setPage={navigateTo} />;
     }
     if (page === "professor" && selectedProf) {
       return (
@@ -117,7 +142,7 @@ export default function App() {
           schedule={schedule}
           onAdd={addSection} onRemove={removeSection}
           onCourseClick={openCourse} onProfClick={openProf}
-          setPage={setPage}
+          setPage={navigateTo}
         />
       );
     }
@@ -138,7 +163,7 @@ export default function App() {
       transition: "background 0.3s",
     }}>
       <Nav
-        page={page} setPage={setPage}
+        page={page} setPage={navigateTo}
         schedule={schedule}
         darkMode={darkMode} setDarkMode={setDarkMode}
       />
@@ -157,6 +182,13 @@ export default function App() {
 
       {showProfileModal && (
         <ProfileModal onClose={() => setShowProfileModal(false)} />
+      )}
+
+      {showAuthModal && (
+        <AuthModal
+          page={pendingPage}
+          onClose={() => { setShowAuthModal(false); setPendingPage(null); }}
+        />
       )}
     </div>
   );
