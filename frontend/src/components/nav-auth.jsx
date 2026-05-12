@@ -31,7 +31,7 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
   const navLinks = [
     { id: "search",   label: "Browse Courses" },
     { id: "schedule", label: "Schedule Builder" },
-    { id: "chatbot",  label: "Darvis" },
+    { id: "chatbot",  label: "Darvis Chatbot" },
     { id: "forums",   label: "Forums" },
     { id: "faqs",     label: "FAQs" },
   ];
