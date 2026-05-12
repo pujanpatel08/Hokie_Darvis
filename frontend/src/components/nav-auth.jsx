@@ -1,5 +1,6 @@
 // Nav component — dark minimal
 import { useState } from "react";
+import { SignInButton, UserButton, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
 
 // StarRating stays here since courses.jsx and dashboard-prof.jsx import it
 export function StarRating({ rating, max = 5, size = 14 }) {
@@ -139,8 +140,8 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
           ))}
         </div>
 
-        {/* Right: theme toggle + year */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        {/* Right: theme toggle + auth */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {setDarkMode && (
             <button
               onClick={() => setDarkMode(m => !m)}
@@ -163,9 +164,39 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
               <ThemeIcon />
             </button>
           )}
+
           <div style={{ fontSize: 11, color: metaColor, fontWeight: 600, letterSpacing: "0.5px" }}>
             VT · {new Date().getFullYear()}
           </div>
+
+          {/* Auth */}
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button style={{
+                background: "#861F41", color: "white", border: "none",
+                borderRadius: 8, padding: "6px 16px",
+                fontWeight: 700, fontSize: 13, cursor: "pointer",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                transition: "opacity 0.15s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+              >
+                Sign in
+              </button>
+            </SignInButton>
+          </SignedOut>
+
+          <SignedIn>
+            <UserButton
+              afterSignOutUrl="/"
+              appearance={{
+                elements: {
+                  avatarBox: { width: 30, height: 30 },
+                },
+              }}
+            />
+          </SignedIn>
         </div>
       </div>
     </nav>
