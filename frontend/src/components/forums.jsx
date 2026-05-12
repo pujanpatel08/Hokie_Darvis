@@ -22,11 +22,12 @@ function timeAgo(ts) {
 }
 
 // ── New Post Modal ────────────────────────────────────────────────
-function NewPostModal({ onClose, onSubmit, saving, darkMode, defaultCategory = "" }) {
-  const [title,    setTitle]    = useState("");
-  const [body,     setBody]     = useState("");
-  const [category, setCategory] = useState(defaultCategory);
-  const [error,    setError]    = useState("");
+function NewPostModal({ onClose, onSubmit, saving, darkMode, defaultCategory = "", currentUser }) {
+  const [title,     setTitle]     = useState("");
+  const [body,      setBody]      = useState("");
+  const [category,  setCategory]  = useState(defaultCategory);
+  const [anonymous, setAnonymous] = useState(false);
+  const [error,     setError]     = useState("");
 
   const dm = darkMode;
   const bg     = dm ? "#0f0d14" : "white";
@@ -49,7 +50,7 @@ function NewPostModal({ onClose, onSubmit, saving, darkMode, defaultCategory = "
     if (!category)     return setError("Pick a category.");
     if (!body.trim())  return setError("Post body is required.");
     setError("");
-    onSubmit({ title: title.trim(), body: body.trim(), category });
+    onSubmit({ title: title.trim(), body: body.trim(), category, anonymous });
   };
 
   return (
@@ -122,6 +123,37 @@ function NewPostModal({ onClose, onSubmit, saving, darkMode, defaultCategory = "
           </div>
         </div>
 
+        {/* Anonymous toggle */}
+        <div style={{
+          marginTop: 8,
+          padding: "12px 14px",
+          background: anonymous
+            ? (dm ? "rgba(134,31,65,0.10)" : "rgba(134,31,65,0.06)")
+            : (dm ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.025)"),
+          border: `1.5px solid ${anonymous ? "rgba(134,31,65,0.30)" : inputBorder}`,
+          borderRadius: 10,
+          transition: "all 0.15s",
+        }}>
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={anonymous}
+              onChange={e => setAnonymous(e.target.checked)}
+              style={{ accentColor: "#861F41", width: 15, height: 15, marginTop: 1, flexShrink: 0, cursor: "pointer" }}
+            />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: anonymous ? "#861F41" : text }}>
+                Post anonymously
+              </div>
+              <div style={{ fontSize: 12, color: sub, marginTop: 2, lineHeight: 1.5 }}>
+                {anonymous
+                  ? `Your post will show as "Anonymous" instead of @${currentUser?.username || currentUser?.firstName || "you"}.`
+                  : "Your username will be shown publicly on this post."}
+              </div>
+            </div>
+          </label>
+        </div>
+
         {error && (
           <div style={{ marginTop: 12, fontSize: 13, color: "#e74c3c" }}>{error}</div>
         )}
@@ -158,8 +190,9 @@ function PostThread({ post, onBack, darkMode, currentUser }) {
   const [loading,        setLoading]        = useState(true);
   const [replyBody,      setReplyBody]      = useState("");
   const [saving,         setSaving]         = useState(false);
-  const [confirmPost,    setConfirmPost]    = useState(false);   // two-click confirm for post delete
-  const [confirmReply,   setConfirmReply]   = useState(null);    // reply id being confirmed
+  const [confirmPost,      setConfirmPost]    = useState(false);   // two-click confirm for post delete
+  const [confirmReply,     setConfirmReply]   = useState(null);    // reply id being confirmed
+  const [replyAnonymous,   setReplyAnonymous] = useState(false);
 
   const dm = darkMode;
   const bg     = dm ? "#080808" : "#f7f4f0";
@@ -190,10 +223,11 @@ function PostThread({ post, onBack, darkMode, currentUser }) {
       post_id:       post.id,
       body:          replyBody.trim(),
       clerk_user_id: currentUser.id,
-      username:      currentUser.username || currentUser.firstName || "Anonymous",
+      username:      replyAnonymous ? "Anonymous" : (currentUser.username || currentUser.firstName || "Anonymous"),
     });
     if (!error) {
       setReplyBody("");
+      setReplyAnonymous(false);
       fetchReplies();
     }
     setSaving(false);
@@ -308,7 +342,7 @@ function PostThread({ post, onBack, darkMode, currentUser }) {
             borderRadius: 14, padding: "20px 24px",
           }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: sub, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 10 }}>
-              Reply as @{currentUser.username || currentUser.firstName}
+              {replyAnonymous ? "Replying anonymously" : `Reply as @${currentUser.username || currentUser.firstName}`}
             </div>
             <textarea
               value={replyBody}
@@ -325,11 +359,28 @@ function PostThread({ post, onBack, darkMode, currentUser }) {
               onFocus={e => e.currentTarget.style.borderColor = "#861F41"}
               onBlur={e => e.currentTarget.style.borderColor = inputBorder}
             />
+
+            {/* Anonymous toggle for replies */}
+            <label style={{
+              display: "flex", alignItems: "center", gap: 8,
+              marginTop: 10, cursor: "pointer",
+            }}>
+              <input
+                type="checkbox"
+                checked={replyAnonymous}
+                onChange={e => setReplyAnonymous(e.target.checked)}
+                style={{ accentColor: "#861F41", width: 14, height: 14, cursor: "pointer" }}
+              />
+              <span style={{ fontSize: 12, color: replyAnonymous ? "#861F41" : sub, fontWeight: 600 }}>
+                Post anonymously
+              </span>
+            </label>
+
             <button
               onClick={submitReply}
               disabled={saving || !replyBody.trim()}
               style={{
-                marginTop: 12, background: "#861F41", color: "white", border: "none",
+                marginTop: 14, background: "#861F41", color: "white", border: "none",
                 borderRadius: 10, padding: "10px 24px",
                 fontWeight: 700, fontSize: 13, cursor: "pointer",
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -542,7 +593,7 @@ export default function ForumsPage({ darkMode = true, setPage }) {
     setShowNewPost(true);
   };
 
-  const submitPost = async ({ title, body, category }) => {
+  const submitPost = async ({ title, body, category, anonymous }) => {
     if (!user) return;
     setSaving(true);
     const { error } = await db.from("forum_posts").insert({
@@ -550,7 +601,7 @@ export default function ForumsPage({ darkMode = true, setPage }) {
       body,
       category,
       clerk_user_id: user.id,
-      username: user.username || user.firstName || "Anonymous",
+      username: anonymous ? "Anonymous" : (user.username || user.firstName || "Anonymous"),
     });
     setSaving(false);
     if (!error) {
@@ -592,6 +643,7 @@ export default function ForumsPage({ darkMode = true, setPage }) {
             saving={saving}
             onClose={() => setShowNewPost(false)}
             onSubmit={submitPost}
+            currentUser={isSignedIn ? user : null}
           />
         )}
       </>
@@ -758,6 +810,7 @@ export default function ForumsPage({ darkMode = true, setPage }) {
           saving={saving}
           onClose={() => setShowNewPost(false)}
           onSubmit={submitPost}
+          currentUser={isSignedIn ? user : null}
         />
       )}
     </div>
