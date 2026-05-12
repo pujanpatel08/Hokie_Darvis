@@ -177,7 +177,7 @@ function Avatar({ user, size = 68 }) {
 // ── Main profile page ─────────────────────────────────────────────
 export default function ProfilePage({ darkMode }) {
   const { user, isLoaded } = useUser();
-  const { openUserProfile } = useClerk();
+  const { openUserProfile, signOut } = useClerk();
   const dm = darkMode;
 
   const c = dm ? {
@@ -348,6 +348,21 @@ export default function ProfilePage({ darkMode }) {
                 title="Change email, password, or profile photo"
               >
                 Account settings
+              </button>
+              <button
+                onClick={() => signOut()}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1.5px solid rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.55)", borderRadius: 10,
+                  padding: "9px 16px", fontWeight: 600, fontSize: 13,
+                  cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+                onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+              >
+                Sign out
               </button>
             </div>
           </div>
