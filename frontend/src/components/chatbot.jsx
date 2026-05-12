@@ -236,7 +236,7 @@ function BotMessage({ msg, darkMode }) {
   const [chartsOpen, setChartsOpen] = useState(false);
 
   return (
-    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", maxWidth: "85%" }}>
+    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0, width: "100%" }}>
       {/* Avatar */}
       <div style={{
         width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
@@ -246,7 +246,7 @@ function BotMessage({ msg, darkMode }) {
         <img src={darkMode ? "/logo.svg" : "/logo-light.svg"} alt="Darvis" style={{ width: 20, height: 20 }} />
       </div>
 
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         {/* Answer text */}
         <div style={{
           background: dm ? "rgba(255,255,255,0.04)" : "white",
@@ -443,7 +443,7 @@ export default function ChatbotPage({ darkMode }) {
 
       {/* ── Messages ────────────────────────────────────────────── */}
       {!isEmpty && (
-        <div style={{ flex: 1, overflowY: "auto", padding: "32px 0 24px", width: "100%" }}>
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "32px 0 24px", width: "100%" }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px", display: "flex", flexDirection: "column", gap: 24 }}>
             {messages.map((msg, i) => (
               msg.role === "user" ? (
