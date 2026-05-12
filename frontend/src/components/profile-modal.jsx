@@ -232,14 +232,13 @@ export default function ProfileModal({ onClose, darkMode = true }) {
               margin: "0 0 12px",
               fontSize: 26, fontWeight: 800, color: "white", letterSpacing: "-0.5px",
             }}>
-              Hey {firstName}! 👋
+              Hey {firstName}!
             </h2>
             <p style={{
               margin: "0 0 36px",
               fontSize: 15, color: "rgba(255,255,255,0.50)", lineHeight: 1.65,
             }}>
-              Take 30 seconds to set up your profile so we can personalize your experience —
-              or skip it and jump straight in.
+              Set up your profile in 30 seconds so we can tailor your results. Or skip it and jump straight in.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

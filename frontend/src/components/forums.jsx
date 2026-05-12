@@ -2,14 +2,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { db } from "../supabase.js";
+import { BookIcon, UserIcon, CalendarIcon, GraduationCapIcon, LightbulbIcon, BellIcon } from "./icons.jsx";
 
 const CATEGORIES = [
-  { icon: "📚", title: "Course Reviews",        description: "Share your experience with specific courses — workload, exams, what to expect." },
-  { icon: "👨‍🏫", title: "Professor Experiences", description: "Discuss teaching styles, office hours, and what it's actually like in their class." },
-  { icon: "📅", title: "Schedule Planning",      description: "Get advice on course loads, scheduling conflicts, and semester planning." },
-  { icon: "🎓", title: "Major & Pathway Advice", description: "Questions about majors, requirements, and degree planning." },
-  { icon: "💡", title: "Study Tips & Resources", description: "Tutoring, study groups, useful websites, and how to survive hard courses." },
-  { icon: "🔔", title: "Site Feedback",          description: "Suggestions, bug reports, and ideas for Darvis features." },
+  { Icon: BookIcon,          title: "Course Reviews",        description: "Share your experience with specific courses — workload, exams, what to expect." },
+  { Icon: UserIcon,          title: "Professor Experiences", description: "Discuss teaching styles, office hours, and what it's actually like in their class." },
+  { Icon: CalendarIcon,      title: "Schedule Planning",     description: "Get advice on course loads, scheduling conflicts, and semester planning." },
+  { Icon: GraduationCapIcon, title: "Major & Pathway Advice", description: "Questions about majors, requirements, and degree planning." },
+  { Icon: LightbulbIcon,     title: "Study Tips & Resources", description: "Tutoring, study groups, useful websites, and how to survive hard courses." },
+  { Icon: BellIcon,          title: "Site Feedback",          description: "Suggestions, bug reports, and ideas for Darvis features." },
 ];
 
 function timeAgo(ts) {
@@ -402,7 +403,7 @@ function CategoryView({ category, onBack, onOpenPost, onNewPost, darkMode, curre
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, gap: 16 }}>
           <div>
-            <div style={{ fontSize: 22, marginBottom: 6 }}>{category.icon}</div>
+            <div style={{ marginBottom: 8, color: subtext }}><category.Icon size={22} /></div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: head, letterSpacing: "-0.4px" }}>{category.title}</h1>
             <p style={{ margin: "6px 0 0", fontSize: 14, color: sub }}>{category.description}</p>
           </div>
@@ -427,7 +428,7 @@ function CategoryView({ category, onBack, onOpenPost, onNewPost, darkMode, curre
             background: cardBg, border: `1px solid ${border}`,
             borderRadius: 14, padding: "48px 32px", textAlign: "center",
           }}>
-            <div style={{ fontSize: 28, marginBottom: 12 }}>{category.icon}</div>
+            <div style={{ marginBottom: 12, display: "flex", justifyContent: "center", color: subtext }}><category.Icon size={28} /></div>
             <div style={{ color: head, fontWeight: 700, marginBottom: 6 }}>No posts yet</div>
             <div style={{ color: sub, fontSize: 14 }}>Be the first to start a discussion in {category.title}.</div>
           </div>
@@ -661,7 +662,7 @@ export default function ForumsPage({ darkMode = true, setPage }) {
                 onMouseEnter={e => { e.currentTarget.style.background = cardHov; e.currentTarget.style.borderColor = borHov; }}
                 onMouseLeave={e => { e.currentTarget.style.background = cardBg;  e.currentTarget.style.borderColor = border; }}
               >
-                <span style={{ fontSize: 26, flexShrink: 0 }}>{cat.icon}</span>
+                <span style={{ flexShrink: 0, display: "flex", alignItems: "center", color: text }}><cat.Icon size={22} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: text }}>{cat.title}</div>
                   <div style={{ fontSize: 13, color: subtext, marginTop: 3, lineHeight: 1.5 }}>{cat.description}</div>

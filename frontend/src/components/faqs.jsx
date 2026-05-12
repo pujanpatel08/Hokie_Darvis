@@ -24,7 +24,7 @@ export default function FaqsPage({ darkMode = true, setPage }) {
       items: [
         {
           q: "What is Darvis?",
-          a: "Darvis is a course-planning tool that lets you explore historical grade distributions for any course or instructor, build your semester schedule, and ask Darvis questions about grade outcomes — all in one place.",
+          a: "Darvis is a course-planning tool. Browse historical grade distributions for any course or instructor, build your semester schedule, and ask the AI questions about grade outcomes.",
         },
         {
           q: "Where does the grade data come from?",
@@ -45,19 +45,19 @@ export default function FaqsPage({ darkMode = true, setPage }) {
       items: [
         {
           q: "What do the grade columns mean?",
-          a: "The key metrics are GPA (average grade points for the section), A/A- rate (share of students who earned an A or A-), F rate (share who failed), W rate (share who withdrew), and total students enrolled. Together these give you a picture of how challenging a section tends to be.",
+          a: "The key metrics are GPA (average grade points for the section), A/A- rate (share who earned an A or A-), F rate (share who failed), W rate (share who withdrew), and total enrollment. Read them together to judge how a section tends to be graded.",
         },
         {
           q: "Can I use this to pick the 'easiest' professor?",
-          a: "The tool shows grade outcomes, not teaching quality. A professor with a high A rate might run a rigorous course that students find genuinely valuable, or they might have an easy grading policy — the data alone can't tell you which. Use it as one input alongside course reviews and your own goals.",
+          a: "The tool shows grade outcomes, not teaching quality. A professor with a high A rate might run a rigorous course or have an easy grading policy. The data alone can't tell you which. Use it alongside course reviews and your own goals.",
         },
         {
           q: "Why does a professor show different numbers across semesters?",
-          a: "Enrollment varies, class composition differs each term, and professors adjust courses over time. Small sections (under 15 students) are especially noisy — a single outlier semester can shift the numbers significantly. The site shows confidence levels to flag this.",
+          a: "Enrollment varies, class composition differs each term, and professors adjust their courses over time. Small sections (under 15 students) can be skewed by a single outlier semester. The site shows confidence levels to flag this.",
         },
         {
           q: "A course I'm looking for isn't showing up. Why?",
-          a: "Darvis currently has grade data for the subjects that have been imported. Not all subjects are in the database yet. If your course isn't appearing, it may not have been added yet — more subjects are being added on a rolling basis.",
+          a: "Darvis has grade data for the subjects that have been imported so far. Not all subjects are in the database yet. If your course isn't showing up, it hasn't been added. More subjects are being added each semester.",
         },
       ],
     },
@@ -70,7 +70,7 @@ export default function FaqsPage({ darkMode = true, setPage }) {
         },
         {
           q: "Why can't Darvis tell me about workload or teaching style?",
-          a: "Darvis only has access to grade distribution numbers — it has no information about teaching style, exam difficulty, workload, attendance policies, or student reviews. For those, check the Forums page or Rate My Professor.",
+          a: "Darvis only has grade distribution numbers. It has no data on teaching style, exam difficulty, workload, attendance policies, or student reviews. For those, check the Forums page or Rate My Professor.",
         },
         {
           q: "Darvis gave me an answer with numbers — how reliable is it?",
@@ -87,7 +87,7 @@ export default function FaqsPage({ darkMode = true, setPage }) {
       items: [
         {
           q: "How does the Schedule Builder work?",
-          a: "Browse or search for courses, then add sections to your schedule. The builder shows time conflicts and lets you compare options side by side. Your schedule is saved locally in your browser — it persists across visits on the same device.",
+          a: "Browse or search for courses, then add sections to your schedule. The builder shows time conflicts and lets you compare options side by side. Your schedule is saved in your browser and persists across visits on the same device.",
         },
         {
           q: "Does the Schedule Builder show live seat availability?",
@@ -100,7 +100,7 @@ export default function FaqsPage({ darkMode = true, setPage }) {
       items: [
         {
           q: "I found a bug or the data looks wrong. What should I do?",
-          a: "Post in the Site Feedback category on the Forums page with as much detail as you can: course, instructor, semester, and what looks off. The data comes from UDC, so if UDC has an error, we likely have it too — but surface it either way.",
+          a: "Post in the Site Feedback category on the Forums page with as much detail as you can: course, instructor, semester, and what looks off. The data comes from UDC, so if UDC has an error, we likely have it too. Surface it either way.",
         },
         {
           q: "I have a feature suggestion.",
@@ -123,8 +123,24 @@ export default function FaqsPage({ darkMode = true, setPage }) {
         </div>
       </div>
 
+      {/* Non-affiliation notice */}
+      <div style={{ maxWidth: 820, margin: "0 auto", padding: "32px 48px 0" }}>
+        <div style={{
+          background: darkMode ? "rgba(134,31,65,0.10)" : "rgba(134,31,65,0.06)",
+          border: `1.5px solid rgba(134,31,65,0.30)`,
+          borderRadius: 12, padding: "14px 20px",
+          display: "flex", gap: 14, alignItems: "flex-start",
+        }}>
+          <div style={{ flexShrink: 0, width: 3, alignSelf: "stretch", background: "#861F41", borderRadius: 2 }} />
+          <p style={{ margin: 0, fontSize: 13, color: text, lineHeight: 1.65 }}>
+            <strong style={{ color: head }}>Not affiliated with Virginia Tech.</strong>{" "}
+            Darvis is an independent project. It is not affiliated with, endorsed by, or officially connected to Virginia Tech or any other university. Grade data comes from publicly available institutional records.
+          </p>
+        </div>
+      </div>
+
       {/* Accordion */}
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "40px 48px 0" }}>
+      <div style={{ maxWidth: 820, margin: "0 auto", padding: "32px 48px 0" }}>
         {sections.map((section, si) => (
           <div key={si} style={{ marginBottom: 40 }}>
             <h2 style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 700, color: subtext, textTransform: "uppercase", letterSpacing: "0.6px" }}>

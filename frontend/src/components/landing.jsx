@@ -291,11 +291,11 @@ export default function LandingPage({ onEnter, darkMode }) {
   const features = [
     {
       n: '01', title: 'Real grade distributions',
-      desc: 'Every A through F — per professor, per semester, back to 2020. Not estimated. Actual institutional data.',
+      desc: 'Every grade per professor and semester, going back to 2020. The numbers come straight from institutional records.',
     },
     {
       n: '02', title: 'RateMyProfessor built in',
-      desc: 'Ratings, difficulty scores, and student tags baked directly into every section listing. No more switching tabs.',
+      desc: 'Ratings, difficulty scores, and student tags appear on each section listing. No separate tab needed.',
     },
     {
       n: '03', title: 'Smart filters',
@@ -303,7 +303,7 @@ export default function LandingPage({ onEnter, darkMode }) {
     },
     {
       n: '04', title: 'Visual schedule builder',
-      desc: 'Drag sections onto a weekly grid, catch conflicts in real time, and lock in your plan before registration day.',
+      desc: 'Add sections to a weekly grid, catch time conflicts instantly, and finalize your schedule before registration opens.',
     },
   ];
 
@@ -444,7 +444,7 @@ export default function LandingPage({ onEnter, darkMode }) {
             fontSize: 17, color: t.textSub,
             lineHeight: 1.72, margin: '0 0 44px', fontWeight: 500, maxWidth: 460,
           }}>
-            Grade distributions, RateMyProfessor ratings, and a visual schedule builder — all in one place.
+            Grade distributions, professor ratings, and a visual schedule builder, in one place.
           </p>
 
           {/* CTA */}
@@ -532,7 +532,7 @@ export default function LandingPage({ onEnter, darkMode }) {
               <span className="lp-line d1" style={{
                 display: 'block', fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 900,
                 color: t.text, lineHeight: 1.1, letterSpacing: '-1.5px',
-              }}>Everything you need to choose wisely.</span>
+              }}>Tools for picking the right class.</span>
             </span>
           </div>
           <div>
@@ -578,7 +578,7 @@ export default function LandingPage({ onEnter, darkMode }) {
               fontSize: 15, color: t.textSub,
               lineHeight: 1.8, margin: '0 0 36px', fontWeight: 500,
             }}>
-              Every section, every professor, every semester since 2001. See exactly how hard a class has been graded — not a guess, not a review, actual institutional data.
+              Every section and professor since 2001. See exactly how a class has been graded, pulled straight from institutional records.
             </p>
             <div className="lp-fade d3">
               <Btn label="Explore grade data →" onClick={onEnter} />
@@ -614,7 +614,7 @@ export default function LandingPage({ onEnter, darkMode }) {
             fontSize: 16, color: t.textMute,
             marginBottom: 44, lineHeight: 1.7, fontWeight: 500,
           }}>
-            Real grade data. Every course. Every professor.
+            Real grade data for every course and professor.
           </p>
           <div className="lp-fade d3">
             <Btn label="Browse courses →" primary onClick={onEnter} />

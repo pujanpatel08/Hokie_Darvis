@@ -1,6 +1,7 @@
 // Schedule Builder component
 import { useState, useMemo } from "react";
 import { MOCK } from "../mock-data.js";
+import { ClockIcon, MapPinIcon, UserIcon, AlertTriangleIcon, CalendarIcon, GridIcon, ListIcon } from "./icons.jsx";
 
 const DAYS = ["Mon","Tue","Wed","Thu","Fri"];
 const DAY_MAP = { "M":"Mon","T":"Tue","W":"Wed","R":"Thu","F":"Fri" };
@@ -220,14 +221,15 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove, onCourseClick, o
                   onClick={() => onCourseClick(course)}
                 >{course?.title}</div>
                 <div style={{ display: "flex", gap: 16, fontSize: 13, color: colors.sub, flexWrap: "wrap" }}>
-                  <span>🕐 {sec.days.map(d => DAY_MAP[d] || d).join(", ")} · {formatTime(sec.startTime)} – {formatTime(sec.endTime)}</span>
-                  <span>📍 {sec.location}</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><ClockIcon size={13} />{sec.days.map(d => DAY_MAP[d] || d).join(", ")} · {formatTime(sec.startTime)} – {formatTime(sec.endTime)}</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><MapPinIcon size={13} />{sec.location}</span>
                   {prof && (
                     <button onClick={() => onProfClick(prof)} style={{
                       background: "none", border: "none", cursor: "pointer", padding: 0,
                       color: "#861F41", fontWeight: 600, fontSize: 13,
                       fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    }}>👤 {prof.name}</button>
+                      display: "flex", alignItems: "center", gap: 5,
+                    }}><UserIcon size={13} color="#861F41" />{prof.name}</button>
                   )}
                 </div>
               </div>
@@ -282,7 +284,7 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
             background: "rgba(192,57,43,0.12)", border: "1.5px solid rgba(248,113,113,0.3)", borderRadius: 12,
             padding: "14px 18px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10,
           }}>
-            <span style={{ fontSize: 20 }}>⚠️</span>
+            <AlertTriangleIcon size={20} color="#f87171" />
             <div>
               <div style={{ fontWeight: 800, color: "#f87171", fontSize: 14 }}>Schedule Conflict Detected</div>
               <div style={{ color: "rgba(248,113,113,0.8)", fontSize: 13 }}>Two or more of your sections overlap. Please remove a conflicting section.</div>
@@ -292,7 +294,7 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
 
         {sections.length === 0 ? (
           <div style={{ textAlign: "center", padding: "80px 0", color: colors.sub }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
+            <div style={{ marginBottom: 16, display: "flex", justifyContent: "center", color: colors.sub }}><CalendarIcon size={48} /></div>
             <div style={{ fontWeight: 800, fontSize: 20, color: colors.text, marginBottom: 8 }}>Your schedule is empty</div>
             <div style={{ fontSize: 15, marginBottom: 24 }}>Browse courses and add sections to build your schedule</div>
             <button onClick={() => setPage("search")} style={{
@@ -305,7 +307,7 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
           <>
             {/* View toggle */}
             <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-              {[["grid","📅 Weekly Grid"],["list","📋 List View"]].map(([v, label]) => (
+              {[["grid", <><GridIcon size={14} /> Weekly Grid</>],["list", <><ListIcon size={14} /> List View</>]].map(([v, label]) => (
                 <button key={v} onClick={() => setView(v)} style={{
                   background: view === v ? "#861F41" : "#111111",
                   color: view === v ? "white" : colors.text,

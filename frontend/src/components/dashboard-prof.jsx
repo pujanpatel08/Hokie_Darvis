@@ -3,6 +3,7 @@ import { useState } from "react";
 import { MOCK } from "../mock-data.js";
 import { StarRating } from "./nav-auth.jsx";
 import { GpaBadge, GradeGrid } from "./courses.jsx";
+import { BookIcon, ClockIcon, MapPinIcon, UserIcon, CalendarIcon } from "./icons.jsx";
 
 const COURSE_COLORS = [
   { bg:"#fde8ee", border:"#861F41", text:"#861F41" },
@@ -104,7 +105,7 @@ function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRem
                 background: colors.card, border: `1.5px solid ${colors.border}`,
                 borderRadius: 16, padding: "48px 24px", textAlign: "center",
               }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>📚</div>
+                <div style={{ marginBottom: 12, display: "flex", justifyContent: "center", color: colors.sub }}><BookIcon size={36} /></div>
                 <div style={{ fontWeight: 700, fontSize: 16, color: colors.text, marginBottom: 8 }}>No courses added yet</div>
                 <div style={{ color: colors.sub, fontSize: 14, marginBottom: 20 }}>Browse courses to add sections to your schedule</div>
                 <button onClick={() => setPage("search")} style={{
@@ -142,15 +143,16 @@ function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRem
                             fontFamily: "'Plus Jakarta Sans', sans-serif",
                           }}>{course?.title}</button>
                           <div style={{ display: "flex", gap: 12, marginTop: 5, fontSize: 13, color: colors.sub, flexWrap: "wrap" }}>
-                            <span>🕐 {sec.days.join("")} {MOCK.formatTime(sec.startTime)}</span>
-                            <span>📍 {sec.location}</span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><ClockIcon size={13} />{sec.days.join("")} {MOCK.formatTime(sec.startTime)}</span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><MapPinIcon size={13} />{sec.location}</span>
                             <span style={{ fontFamily: "monospace" }}>CRN {sec.crn}</span>
                             {prof && (
                               <button onClick={() => onProfClick(prof)} style={{
                                 background: "none", border: "none", padding: 0, cursor: "pointer",
                                 color: "#861F41", fontWeight: 600, fontSize: 13,
                                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                              }}>👤 {prof.name}</button>
+                                display: "flex", alignItems: "center", gap: 5,
+                              }}><UserIcon size={13} color="#861F41" />{prof.name}</button>
                             )}
                           </div>
                         </div>
@@ -194,7 +196,7 @@ function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRem
               background: "#fdf4f6", border: "1.5px solid #f5c0cc",
               borderRadius: 16, padding: "18px",
             }}>
-              <div style={{ fontWeight: 800, fontSize: 14, color: "#861F41", marginBottom: 6 }}>📅 Important Dates</div>
+              <div style={{ fontWeight: 800, fontSize: 14, color: "#861F41", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}><CalendarIcon size={14} color="#861F41" />Important Dates</div>
               {[
                 ["Aug 25", "Fall 2025 classes begin"],
                 ["Sep 8", "Last day to add/drop"],

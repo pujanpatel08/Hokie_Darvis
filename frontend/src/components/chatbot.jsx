@@ -375,7 +375,7 @@ export default function ChatbotPage({ darkMode }) {
       setMessages(prev => [...prev, {
         role: "bot",
         answer: isTimeout
-          ? "The request timed out. If the server was inactive, Render free tier takes ~30 seconds to start — try again in a moment."
+          ? "The request timed out. If the server was inactive, Render's free tier takes about 30 seconds to spin up. Try again in a moment."
           : isNetwork
           ? "Couldn't reach the server. Check your connection or try again in ~30 seconds."
           : `Something went wrong: ${err.message}`,
@@ -419,7 +419,7 @@ export default function ChatbotPage({ darkMode }) {
             margin: "0 0 40px", fontSize: 15, color: c.sub,
             maxWidth: 440, textAlign: "center", lineHeight: 1.7,
           }}>
-            Grade distributions, professor comparisons, and historical trends — all from real data.
+            Grade distributions, professor comparisons, and historical trends. All from real institutional data.
           </p>
 
           {/* Suggested questions */}
