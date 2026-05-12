@@ -151,7 +151,7 @@ function Avatar({ user, size = 68 }) {
         src={user.imageUrl}
         alt="Profile"
         style={{
-          width: size, height: size, borderRadius: "50%",
+          width: size, height: size, borderRadius: Math.round(size * 0.18),
           objectFit: "cover",
           border: "3px solid rgba(255,255,255,0.3)",
           flexShrink: 0,
@@ -162,8 +162,8 @@ function Avatar({ user, size = 68 }) {
 
   return (
     <div style={{
-      width: size, height: size, borderRadius: "50%",
-      background: "#f0c050", color: "#861F41",
+      width: size, height: size, borderRadius: Math.round(size * 0.18),
+      background: "linear-gradient(135deg, #6b1833 0%, #861F41 55%, #b03060 100%)", color: "white",
       fontWeight: 900, fontSize: Math.round(size * 0.36),
       display: "flex", alignItems: "center", justifyContent: "center",
       border: "3px solid rgba(255,255,255,0.3)",

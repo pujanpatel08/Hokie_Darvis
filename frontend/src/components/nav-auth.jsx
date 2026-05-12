@@ -216,7 +216,7 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
                 title="Your profile"
                 style={{
                   background: "none", border: "none", cursor: "pointer", padding: 0,
-                  borderRadius: "50%",
+                  borderRadius: 7,
                   outline: page === "profile" ? "2px solid #861F41" : "2px solid transparent",
                   outlineOffset: 2,
                   transition: "outline-color 0.15s",
@@ -227,33 +227,18 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
                   <img
                     src={user.imageUrl}
                     alt="Profile"
-                    style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", display: "block" }}
+                    style={{ width: 30, height: 30, borderRadius: 7, objectFit: "cover", display: "block" }}
                   />
                 ) : (
                   <div style={{
-                    width: 30, height: 30, borderRadius: "50%",
-                    background: "#f0c050", color: "#861F41",
+                    width: 30, height: 30, borderRadius: 7,
+                    background: "linear-gradient(135deg, #6b1833 0%, #861F41 55%, #b03060 100%)", color: "white",
                     fontWeight: 900, fontSize: 11,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     {([user?.firstName, user?.lastName].filter(Boolean).map(n => n[0]).join("") || user?.username?.[0] || "?").toUpperCase()}
                   </div>
                 )}
-              </button>
-              {/* Sign out */}
-              <button
-                onClick={() => signOut()}
-                style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  color: metaColor, fontSize: 12, fontWeight: 600,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  padding: "4px 6px", borderRadius: 6,
-                  transition: "color 0.15s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.color = darkMode ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.55)"}
-                onMouseLeave={e => e.currentTarget.style.color = metaColor}
-              >
-                Sign out
               </button>
             </div>
           </SignedIn>
