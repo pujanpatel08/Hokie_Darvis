@@ -8,7 +8,7 @@ const PAGE_LABELS = {
   forums:   "Forums",
 };
 
-export default function AuthModal({ page, onClose }) {
+export default function AuthModal({ page, onClose, darkMode = true }) {
   return (
     <div
       style={{
@@ -47,7 +47,7 @@ export default function AuthModal({ page, onClose }) {
         >×</button>
 
         <div style={{ marginBottom: 20 }}>
-          <img src="/logo.svg" alt="Darvis" style={{ width: 56, height: 56 }} />
+          <img src={darkMode ? "/logo.svg" : "/logo-light.svg"} alt="Darvis" style={{ width: 56, height: 56 }} />
         </div>
 
         <div style={{

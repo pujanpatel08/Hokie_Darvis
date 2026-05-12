@@ -243,7 +243,7 @@ function BotMessage({ msg, darkMode }) {
         background: "#861F41", display: "flex", alignItems: "center", justifyContent: "center",
         marginTop: 2, overflow: "hidden",
       }}>
-        <img src="/logo.svg" alt="Darvis" style={{ width: 20, height: 20 }} />
+        <img src={darkMode ? "/logo.svg" : "/logo-light.svg"} alt="Darvis" style={{ width: 20, height: 20 }} />
       </div>
 
       <div style={{ flex: 1 }}>
@@ -468,7 +468,7 @@ export default function ChatbotPage({ darkMode }) {
                   background: "#861F41", display: "flex", alignItems: "center", justifyContent: "center",
                   overflow: "hidden",
                 }}>
-                  <img src="/logo.svg" alt="Darvis" style={{ width: 20, height: 20 }} />
+                  <img src={darkMode ? "/logo.svg" : "/logo-light.svg"} alt="Darvis" style={{ width: 20, height: 20 }} />
                 </div>
                 <div style={{
                   background: dm ? "rgba(255,255,255,0.04)" : "white",

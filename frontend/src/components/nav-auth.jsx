@@ -86,7 +86,7 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
           padding: 0, marginRight: 48,
           display: "flex", alignItems: "center", gap: 10,
         }}>
-          <img src="/logo.svg" alt="Darvis" style={{ width: 26, height: 26 }} />
+          <img src={darkMode ? "/logo.svg" : "/logo-light.svg"} alt="Darvis" style={{ width: 26, height: 26 }} />
           <span style={{
             fontWeight: 900, fontSize: 17, color: logoColor,
             letterSpacing: "-0.5px", transition: "color 0.3s",

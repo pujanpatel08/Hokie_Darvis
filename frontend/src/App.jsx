@@ -181,11 +181,12 @@ export default function App() {
       )}
 
       {showProfileModal && (
-        <ProfileModal onClose={() => setShowProfileModal(false)} />
+        <ProfileModal darkMode={darkMode} onClose={() => setShowProfileModal(false)} />
       )}
 
       {showAuthModal && (
         <AuthModal
+          darkMode={darkMode}
           page={pendingPage}
           onClose={() => { setShowAuthModal(false); setPendingPage(null); }}
         />

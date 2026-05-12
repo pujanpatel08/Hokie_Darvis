@@ -128,7 +128,7 @@ function TagInput({ tags, onChange, placeholder, suggestions = [] }) {
   );
 }
 
-export default function ProfileModal({ onClose }) {
+export default function ProfileModal({ onClose, darkMode = true }) {
   const { user } = useUser();
   const [step, setStep] = useState("welcome"); // "welcome" | "form"
   const [saving, setSaving] = useState(false);
@@ -222,7 +222,7 @@ export default function ProfileModal({ onClose }) {
         {step === "welcome" && (
           <div style={{ padding: "48px 40px", textAlign: "center" }}>
             <div style={{ marginBottom: 20 }}>
-              <img src="/logo.svg" alt="Darvis" style={{ width: 60, height: 60 }} />
+              <img src={darkMode ? "/logo.svg" : "/logo-light.svg"} alt="Darvis" style={{ width: 60, height: 60 }} />
             </div>
             <div style={{
               fontSize: 10, fontWeight: 900, color: "#861F41",
