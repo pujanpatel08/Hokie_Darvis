@@ -327,50 +327,30 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   const dm = darkMode;
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(true);
-  const [rmpMap, setRmpMap] = useState({});  // instructorName → {rmp_rating, rmp_difficulty, rmp_count, rmp_tags}
 
-  // Fetch full grade detail (rawSections, instructors, etc.) when modal opens
+  // Fetch full grade detail + RMP data in one call
   useEffect(() => {
     setDetailLoading(true);
     setDetail(null);
-    setRmpMap({});
     API.getCourse(course.subject, course.number)
-      .then(d => {
-        setDetail(d);
-        setDetailLoading(false);
-        // After loading sections, fetch RMP data for all instructors in parallel
-        const names = [...new Set((d.rawSections || []).map(s => s.instructor).filter(Boolean))];
-        if (names.length > 0 && window.darvisDb) {
-          window.darvisDb
-            .from("professors")
-            .select("name, rmp_rating, rmp_difficulty, rmp_count, rmp_tags")
-            .in("name", names)
-            .then(({ data }) => {
-              if (data) {
-                const map = {};
-                data.forEach(r => { map[r.name] = r; });
-                setRmpMap(map);
-              }
-            })
-            .catch(() => {});
-        }
-      })
+      .then(d => { setDetail(d); setDetailLoading(false); })
       .catch(() => setDetailLoading(false));
   }, [course.subject, course.number]);
 
-  // Build instructor list from real sections data (falls back to mock if not loaded yet)
-  const sections = MOCK.getSections(course.id);
+  // Build instructor list from real sections data (rmpMap comes from API.getCourse now)
+  const rmpMap = detail?.rmpMap || {};
   const instructorNames = detail
-    ? [...new Set(detail.rawSections.map(s => s.instructor).filter(Boolean))]
+    ? [...new Set(detail.rawSections.map(s => s.instructor).filter(s => s && s !== 'Unknown'))]
     : [];
+  const sections = MOCK.getSections(course.id);
   const profs = instructorNames.length > 0
     ? instructorNames.map(name => ({
         id: name,
         name,
-        rmpRating: rmpMap[name]?.rmp_rating ?? null,
+        rmpRating:    rmpMap[name]?.rmp_rating    ?? null,
         rmpDifficulty: rmpMap[name]?.rmp_difficulty ?? null,
-        rmpCount: rmpMap[name]?.rmp_count ?? 0,
-        rmpTags: rmpMap[name]?.rmp_tags ?? [],
+        rmpCount:     rmpMap[name]?.rmp_count      ?? 0,
+        rmpTags:      rmpMap[name]?.rmp_tags       ?? [],
       }))
     : [...new Set(sections.map(s => s.profId))].map(id => MOCK.getProf(id)).filter(Boolean);
   const colors = dm ? {

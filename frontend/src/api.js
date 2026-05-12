@@ -79,7 +79,8 @@ export const API = {
     return [...new Set((data || []).map(r => r.subject))];
   },
 
-  // Returns a single course by subject + course_number, plus its raw grade rows.
+  // Returns a single course by subject + course_number, plus its raw grade rows
+  // and RMP data for each instructor.
   async getCourse(subject, number) {
     const [courseRes, gradesRes] = await Promise.all([
       db
@@ -99,11 +100,28 @@ export const API = {
     if (courseRes.error) throw courseRes.error;
     const course = formatCourse(courseRes.data);
     const grades = gradesRes.data || [];
+
     // Distinct instructors
-    course.instructors = [...new Set(grades.map(r => r.instructor).filter(Boolean))].sort();
+    const instructorNames = [...new Set(grades.map(r => r.instructor).filter(Boolean))];
+    course.instructors = instructorNames.slice().sort();
+
+    // Fetch RMP data for all instructors in one query
+    let rmpMap = {};
+    if (instructorNames.length > 0) {
+      const { data: rmpRows } = await db
+        .from('professors')
+        .select('name, rmp_rating, rmp_difficulty, rmp_count, rmp_tags')
+        .in('name', instructorNames);
+      if (rmpRows) {
+        rmpRows.forEach(r => { rmpMap[r.name] = r; });
+      }
+    }
+    course.rmpMap = rmpMap;
+
     // Grade trend by term
     course.gradesByTerm = buildTermTrend(grades);
-    // Raw per-section rows for the breakdown table in CourseDetail
+
+    // Raw per-section rows for the breakdown table
     course.rawSections = grades.map(r => ({
       academicYear:     r.academic_year,
       term:             r.term,

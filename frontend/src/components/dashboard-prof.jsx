@@ -1,5 +1,6 @@
 // Dashboard + Professor Profile components
 import { useState, useEffect } from "react";
+import { db } from "../supabase.js";
 import { MOCK } from "../mock-data.js";
 import { StarRating } from "./nav-auth.jsx";
 import { GpaBadge, GradeGrid } from "./courses.jsx";
@@ -232,8 +233,8 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
 
   // Load real course data from Supabase grades table
   useEffect(() => {
-    if (!window.darvisDb || !prof?.name) { setLoading(false); return; }
-    window.darvisDb
+    if (!prof?.name) { setLoading(false); return; }
+    db
       .from("grades")
       .select("subject, course_number, course_title, gpa, a_pct, a_minus_pct, b_plus_pct, b_pct, b_minus_pct, c_plus_pct, c_pct, c_minus_pct, d_plus_pct, d_pct, d_minus_pct, f_pct, graded_enrollment")
       .eq("instructor", prof.name)
