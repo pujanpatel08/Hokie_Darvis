@@ -443,7 +443,7 @@ export default function ChatbotPage({ darkMode }) {
 
       {/* ── Messages ────────────────────────────────────────────── */}
       {!isEmpty && (
-        <div style={{ flex: 1, overflowY: "auto", padding: "32px 0 24px" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "32px 0 24px", width: "100%" }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px", display: "flex", flexDirection: "column", gap: 24 }}>
             {messages.map((msg, i) => (
               msg.role === "user" ? (
