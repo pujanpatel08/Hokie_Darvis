@@ -457,7 +457,6 @@ export default function LandingPage({ onEnter, darkMode }) {
             marginTop: 28, fontSize: 12, color: t.textFaint,
             fontWeight: 600, display: 'flex', gap: 20, flexWrap: 'wrap',
           }}>
-            <span>✓ No account needed</span>
             <span>✓ Real institutional grade data</span>
             <span>✓ Free forever</span>
           </div>
@@ -602,20 +601,20 @@ export default function LandingPage({ onEnter, darkMode }) {
             <span className="lp-line" style={{
               display: 'block', fontSize: 'clamp(40px, 6vw, 80px)',
               fontWeight: 900, color: t.text, letterSpacing: '-3px', lineHeight: 1.0,
-            }}>Build your best</span>
+            }}>Stop guessing.</span>
           </span>
           <span className="lp-clip">
             <span className="lp-line d1" style={{
               display: 'block', fontSize: 'clamp(40px, 6vw, 80px)',
               fontWeight: 900, color: '#861F41', letterSpacing: '-3px', lineHeight: 1.0,
               marginBottom: 32,
-            }}>semester yet.</span>
+            }}>Start knowing.</span>
           </span>
           <p className="lp-fade d2" style={{
             fontSize: 16, color: t.textMute,
             marginBottom: 44, lineHeight: 1.7, fontWeight: 500,
           }}>
-            No account needed to browse. Real data. Free forever.
+            Real grade data. Every course. Every professor.
           </p>
           <div className="lp-fade d3">
             <Btn label="Browse courses →" primary onClick={onEnter} />
