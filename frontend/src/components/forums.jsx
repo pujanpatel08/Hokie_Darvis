@@ -553,6 +553,13 @@ export default function ForumsPage({ darkMode = true, setPage }) {
   const [newPostCategory, setNewPostCategory] = useState("");
   const [saving,        setSaving]       = useState(false);
 
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
   const dm = darkMode;
   const bg      = dm ? "#080808"                 : "#f7f4f0";
   const cardBg  = dm ? "rgba(255,255,255,0.04)"  : "rgba(0,0,0,0.03)";
@@ -651,13 +658,6 @@ export default function ForumsPage({ darkMode = true, setPage }) {
   }
 
   // ── Index view ──────────────────────────────────────────────────
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
-
   return (
     <div style={{ background: bg, minHeight: "100vh", color: text, fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: 80, transition: "background 0.3s" }}>
 
