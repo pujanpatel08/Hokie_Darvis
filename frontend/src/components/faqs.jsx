@@ -20,23 +20,23 @@ export default function FaqsPage({ darkMode = true, setPage }) {
 
   const sections = [
     {
-      heading: "About HokieDarvis",
+      heading: "About Darvis",
       items: [
         {
-          q: "What is HokieDarvis?",
-          a: "HokieDarvis is a course-planning tool built for Virginia Tech students. It lets you explore historical grade distributions for any VT course or instructor, build your semester schedule, and ask Darvis questions about grade outcomes — all in one place.",
+          q: "What is Darvis?",
+          a: "Darvis is a course-planning tool that lets you explore historical grade distributions for any course or instructor, build your semester schedule, and ask Darvis questions about grade outcomes — all in one place.",
         },
         {
           q: "Where does the grade data come from?",
-          a: "All grade data comes from the VT University Data Commons (UDC), which publishes official grade distributions by course, section, instructor, and semester. The data goes back to AY 2020–21.",
+          a: "Grade data comes from publicly available university data sources, which publish official grade distributions by course, section, instructor, and semester.",
         },
         {
           q: "How often is the data updated?",
-          a: "Grade data is updated once per semester after official UDC records are published. The site shows the most recent batch available at the time of the last update.",
+          a: "Grade data is updated once per semester after official records are published. The site shows the most recent batch available at the time of the last update.",
         },
         {
-          q: "Is this an official Virginia Tech product?",
-          a: "No. HokieDarvis is an independent student-built project. It uses publicly available VT data but is not affiliated with or endorsed by Virginia Tech.",
+          q: "Is this an official university product?",
+          a: "No. Darvis is an independent student-built project. It uses publicly available data and is not affiliated with or endorsed by any university.",
         },
       ],
     },
@@ -57,7 +57,7 @@ export default function FaqsPage({ darkMode = true, setPage }) {
         },
         {
           q: "A course I'm looking for isn't showing up. Why?",
-          a: "HokieDarvis currently has grade data for the subjects that have been imported from UDC. Not all VT subjects are in the database yet. If your course isn't appearing, it may not have been scraped yet — more subjects are being added on a rolling basis.",
+          a: "Darvis currently has grade data for the subjects that have been imported. Not all subjects are in the database yet. If your course isn't appearing, it may not have been added yet — more subjects are being added on a rolling basis.",
         },
       ],
     },
@@ -91,7 +91,7 @@ export default function FaqsPage({ darkMode = true, setPage }) {
         },
         {
           q: "Does the Schedule Builder show live seat availability?",
-          a: "Not yet. Real-time seat counts require a live feed from VT's Timetable of Classes, which is on the roadmap. For now, treat the sections as a planning reference and check Hokie SPA for final enrollment.",
+          a: "Not yet. Real-time seat counts are on the roadmap. For now, treat the sections as a planning reference and check your registrar's site for final enrollment.",
         },
       ],
     },
@@ -118,7 +118,7 @@ export default function FaqsPage({ darkMode = true, setPage }) {
         <div style={{ maxWidth: 820, margin: "0 auto", padding: "0 48px" }}>
           <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.5px", color: head }}>FAQs</h1>
           <p style={{ margin: "10px 0 0", color: subtext, fontSize: 15 }}>
-            Common questions about HokieDarvis, the grade data, and Darvis.
+            Common questions about Darvis, the grade data, and the AI.
           </p>
         </div>
       </div>

@@ -291,7 +291,7 @@ export default function LandingPage({ onEnter, darkMode }) {
   const features = [
     {
       n: '01', title: 'Real grade distributions',
-      desc: 'Every A through F — per professor, per semester, back to 2020. Not estimated. Actual Virginia Tech institutional data.',
+      desc: 'Every A through F — per professor, per semester, back to 2020. Not estimated. Actual institutional data.',
     },
     {
       n: '02', title: 'RateMyProfessor built in',
@@ -420,7 +420,7 @@ export default function LandingPage({ onEnter, darkMode }) {
             <span style={{
               fontSize: 10, fontWeight: 900, letterSpacing: '2.5px',
               color: '#861F41', textTransform: 'uppercase',
-            }}>Virginia Tech · Course Selection</span>
+            }}>Course Planning · Grade Data</span>
           </div>
 
           {/* Headline */}
@@ -444,7 +444,7 @@ export default function LandingPage({ onEnter, darkMode }) {
             fontSize: 17, color: t.textSub,
             lineHeight: 1.72, margin: '0 0 44px', fontWeight: 500, maxWidth: 460,
           }}>
-            Grade distributions, RateMyProfessor ratings, and a visual schedule builder — built exclusively for Virginia Tech students.
+            Grade distributions, RateMyProfessor ratings, and a visual schedule builder — all in one place.
           </p>
 
           {/* CTA */}
@@ -458,7 +458,7 @@ export default function LandingPage({ onEnter, darkMode }) {
             fontWeight: 600, display: 'flex', gap: 20, flexWrap: 'wrap',
           }}>
             <span>✓ No account needed</span>
-            <span>✓ Real VT institutional data</span>
+            <span>✓ Real institutional grade data</span>
             <span>✓ Free forever</span>
           </div>
         </div>
@@ -573,13 +573,13 @@ export default function LandingPage({ onEnter, darkMode }) {
               <span className="lp-line d1" style={{
                 display: 'block', fontSize: 'clamp(26px, 3.5vw, 44px)', fontWeight: 900,
                 color: t.text, lineHeight: 1.1, letterSpacing: '-1.5px', marginBottom: 22,
-              }}>24 years of real VT grade records.</span>
+              }}>24 years of real grade records.</span>
             </span>
             <p className="lp-fade d2" style={{
               fontSize: 15, color: t.textSub,
               lineHeight: 1.8, margin: '0 0 36px', fontWeight: 500,
             }}>
-              Every section, every professor, every semester since 2001. See exactly how hard a class has been graded — not a guess, not a review, actual institutional data from Virginia Tech.
+              Every section, every professor, every semester since 2001. See exactly how hard a class has been graded — not a guess, not a review, actual institutional data.
             </p>
             <div className="lp-fade d3">
               <Btn label="Explore grade data →" onClick={onEnter} />
@@ -630,9 +630,9 @@ export default function LandingPage({ onEnter, darkMode }) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         background: footerBg,
       }}>
-        <span style={{ fontWeight: 900, fontSize: 14, color: t.textSub, letterSpacing: '-0.5px' }}>HokieDarvis</span>
+        <span style={{ fontWeight: 900, fontSize: 14, color: t.textSub, letterSpacing: '-0.5px' }}>Darvis</span>
         <span style={{ fontSize: 11, color: t.textFaint, fontWeight: 600 }}>
-          Built for Virginia Tech students · Data from VT Institutional Research
+          Course planning · Grade data · Schedule builder
         </span>
       </footer>
 

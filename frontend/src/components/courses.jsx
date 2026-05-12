@@ -961,7 +961,7 @@ export default function CourseSearch({ darkMode, schedule, onCourseClick, onProf
         <span style={{
           fontSize: 10, fontWeight: 900, letterSpacing: "2.5px",
           color: "#861F41", textTransform: "uppercase",
-        }}>Virginia Tech · Course Catalog</span>
+        }}>Course Catalog</span>
 
         {/* Headline */}
         <h1 style={{

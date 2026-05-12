@@ -8,13 +8,6 @@ const PAGE_LABELS = {
   forums:   "Forums",
 };
 
-const PAGE_ICONS = {
-  search:   "📚",
-  schedule: "📅",
-  chatbot:  "🦃",
-  forums:   "💬",
-};
-
 export default function AuthModal({ page, onClose }) {
   return (
     <div
@@ -53,8 +46,8 @@ export default function AuthModal({ page, onClose }) {
           onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.28)"}
         >×</button>
 
-        <div style={{ fontSize: 50, marginBottom: 18 }}>
-          {PAGE_ICONS[page] || "🔒"}
+        <div style={{ marginBottom: 20 }}>
+          <img src="/logo.svg" alt="Darvis" style={{ width: 56, height: 56 }} />
         </div>
 
         <div style={{
@@ -77,7 +70,7 @@ export default function AuthModal({ page, onClose }) {
           margin: "0 0 30px",
           fontSize: 14, color: "rgba(255,255,255,0.42)", lineHeight: 1.65,
         }}>
-          HokieDarvis is invite-only during beta.<br />
+          Darvis is invite-only during beta.<br />
           Already have an invite? Sign in or create an account.
         </p>
 

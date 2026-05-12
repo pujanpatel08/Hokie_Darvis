@@ -50,7 +50,7 @@ export default function ForumsPage({ darkMode = true, setPage }) {
     {
       icon: "🔔",
       title: "Site Feedback",
-      description: "Suggestions, bug reports, and ideas for HokieDarvis features.",
+      description: "Suggestions, bug reports, and ideas for Darvis features.",
       posts: 19,
     },
   ];
@@ -75,7 +75,7 @@ export default function ForumsPage({ darkMode = true, setPage }) {
                 Forums
               </h1>
               <p style={{ margin: "10px 0 0", color: subtext, fontSize: 15 }}>
-                Real talk about VT courses from students who've been there.
+                Real talk about courses from students who've been there.
               </p>
             </div>
             <button
@@ -187,7 +187,7 @@ export default function ForumsPage({ darkMode = true, setPage }) {
               Looking for grade data?
             </div>
             <div style={{ fontSize: 13, color: subtext, lineHeight: 1.55, marginBottom: 14 }}>
-              Darvis can pull historical grade distributions for any VT course or instructor instantly.
+              Darvis can pull historical grade distributions for any course or instructor instantly.
             </div>
             <button
               onClick={() => setPage && setPage("chatbot")}

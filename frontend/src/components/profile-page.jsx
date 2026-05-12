@@ -274,7 +274,7 @@ export default function ProfilePage({ darkMode }) {
             </div>
             <div style={{ flex: 1 }}>
               <h1 style={{ margin: "0 0 4px", color: "white", fontWeight: 800, fontSize: 24, letterSpacing: "-0.4px" }}>
-                {[user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "Hokie"}
+                {[user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "User"}
               </h1>
               <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 14 }}>
                 {user?.username && <span style={{ marginRight: 12 }}>@{user.username}</span>}

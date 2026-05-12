@@ -1,4 +1,4 @@
-// HokieDarvis Mock Data
+// Darvis Mock Data
 export const MOCK = {
   currentUser: null,
 

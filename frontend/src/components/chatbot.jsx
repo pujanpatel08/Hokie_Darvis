@@ -241,8 +241,10 @@ function BotMessage({ msg, darkMode }) {
       <div style={{
         width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
         background: "#861F41", display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 14, marginTop: 2,
-      }}>🦃</div>
+        marginTop: 2, overflow: "hidden",
+      }}>
+        <img src="/logo.svg" alt="Darvis" style={{ width: 20, height: 20 }} />
+      </div>
 
       <div style={{ flex: 1 }}>
         {/* Answer text */}
@@ -411,7 +413,7 @@ export default function ChatbotPage({ darkMode }) {
             margin: "0 0 12px", fontSize: "clamp(28px, 4vw, 48px)",
             fontWeight: 900, color: c.text, letterSpacing: "-2px", textAlign: "center",
           }}>
-            Ask about <span style={{ color: "#861F41" }}>any VT course.</span>
+            Ask about <span style={{ color: "#861F41" }}>any course.</span>
           </h1>
           <p style={{
             margin: "0 0 40px", fontSize: 15, color: c.sub,
@@ -464,8 +466,10 @@ export default function ChatbotPage({ darkMode }) {
                 <div style={{
                   width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
                   background: "#861F41", display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 14,
-                }}>🦃</div>
+                  overflow: "hidden",
+                }}>
+                  <img src="/logo.svg" alt="Darvis" style={{ width: 20, height: 20 }} />
+                </div>
                 <div style={{
                   background: dm ? "rgba(255,255,255,0.04)" : "white",
                   border: `1px solid ${c.border}`,
@@ -601,7 +605,7 @@ export default function ChatbotPage({ darkMode }) {
           </div>
 
           <div style={{ fontSize: 11, color: c.faint, marginTop: 8, textAlign: "center" }}>
-            Based on historical VT grade data only · Enter to send
+            Based on historical grade data only · Enter to send
           </div>
         </div>
       </div>

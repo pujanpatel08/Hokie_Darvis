@@ -221,11 +221,13 @@ export default function ProfileModal({ onClose }) {
         {/* ── Welcome step ── */}
         {step === "welcome" && (
           <div style={{ padding: "48px 40px", textAlign: "center" }}>
-            <div style={{ fontSize: 52, marginBottom: 20 }}>🦃</div>
+            <div style={{ marginBottom: 20 }}>
+              <img src="/logo.svg" alt="Darvis" style={{ width: 60, height: 60 }} />
+            </div>
             <div style={{
               fontSize: 10, fontWeight: 900, color: "#861F41",
               letterSpacing: "2.5px", textTransform: "uppercase", marginBottom: 16,
-            }}>Welcome to HokieDarvis</div>
+            }}>Welcome to Darvis</div>
             <h2 style={{
               margin: "0 0 12px",
               fontSize: 26, fontWeight: 800, color: "white", letterSpacing: "-0.5px",

@@ -82,13 +82,14 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
         <button onClick={() => setPage("landing")} style={{
           background: "none", border: "none", cursor: "pointer",
           padding: 0, marginRight: 48,
-          display: "flex", alignItems: "center", gap: 0,
+          display: "flex", alignItems: "center", gap: 10,
         }}>
+          <img src="/logo.svg" alt="Darvis" style={{ width: 26, height: 26 }} />
           <span style={{
             fontWeight: 900, fontSize: 17, color: logoColor,
             letterSpacing: "-0.5px", transition: "color 0.3s",
           }}>
-            Hokie<span style={{ color: "#861F41" }}>Darvis</span>
+            Darvis
           </span>
         </button>
 
@@ -166,7 +167,7 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
           )}
 
           <div style={{ fontSize: 11, color: metaColor, fontWeight: 600, letterSpacing: "0.5px" }}>
-            VT · {new Date().getFullYear()}
+            {new Date().getFullYear()}
           </div>
 
           {/* Auth */}
