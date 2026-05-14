@@ -89,13 +89,6 @@ export default function AboutPage({ darkMode, setPage }) {
     },
   ];
 
-  const team = [
-    {
-      name: "Pujan Patel",
-      role: "Founder & Developer",
-      bio: "CS + Entrepreneurship, Virginia Tech '27. Built Darvis to make course planning less of a puzzle.",
-    },
-  ];
 
   return (
     <div style={{
@@ -252,48 +245,6 @@ export default function AboutPage({ darkMode, setPage }) {
             is a student project and is not affiliated with Virginia Tech or
             Rate My Professors.
           </p>
-        </section>
-
-        {/* Team */}
-        <section style={{ marginBottom: 64 }}>
-          <h2 style={{
-            margin: "0 0 24px", fontSize: 22, fontWeight: 900,
-            color: colors.text, letterSpacing: "-0.3px",
-          }}>
-            Team
-          </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {team.map(member => (
-              <div key={member.name} style={{
-                display: "flex", alignItems: "center", gap: 20,
-                background: colors.card,
-                border: `1.5px solid ${colors.border}`,
-                borderRadius: 16,
-                padding: "20px 24px",
-              }}>
-                <div style={{
-                  width: 52, height: 52, borderRadius: 14, flexShrink: 0,
-                  background: "linear-gradient(135deg, #6b1833 0%, #861F41 55%, #b03060 100%)",
-                  color: "white", fontWeight: 900, fontSize: 18,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  letterSpacing: "-0.5px",
-                }}>
-                  {member.name.split(" ").map(n => n[0]).join("")}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: 16, color: colors.text, marginBottom: 3 }}>
-                    {member.name}
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: colors.accent, marginBottom: 6 }}>
-                    {member.role}
-                  </div>
-                  <div style={{ fontSize: 13, color: colors.sub, fontWeight: 500, lineHeight: 1.5 }}>
-                    {member.bio}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </section>
 
         {/* CTA */}
