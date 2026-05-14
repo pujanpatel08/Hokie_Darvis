@@ -16,7 +16,7 @@ import InstructorsPage from "./components/instructors.jsx";
 import AboutPage from "./components/about.jsx";
 
 // Pages that require authentication
-const PROTECTED = new Set(["search", "schedule", "chatbot", "forums"]);
+const PROTECTED = new Set(["search", "schedule", "chatbot", "forums", "instructors"]);
 
 export default function App() {
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
