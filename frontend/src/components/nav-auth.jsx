@@ -41,11 +41,13 @@ export default function Nav({ page, setPage, schedule, darkMode = true, setDarkM
   useEffect(() => { setMenuOpen(false); }, [page]);
 
   const navLinks = [
-    { id: "search",   label: "Browse Courses" },
-    { id: "schedule", label: "Schedule Builder" },
-    { id: "chatbot",  label: "Darvis Chatbot" },
-    { id: "forums",   label: "Forums" },
-    { id: "faqs",     label: "FAQs" },
+    { id: "search",      label: "Courses" },
+    { id: "instructors", label: "Instructors" },
+    { id: "schedule",    label: "Schedule" },
+    { id: "chatbot",     label: "Chatbot" },
+    { id: "forums",      label: "Forums" },
+    { id: "faqs",        label: "FAQs" },
+    { id: "about",       label: "About" },
   ];
 
   // Nav adapts: on landing page the campus image is behind it, elsewhere App bg applies

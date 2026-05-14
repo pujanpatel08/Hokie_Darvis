@@ -69,6 +69,28 @@ export const API = {
     return allData.map(formatCourse);
   },
 
+  // Returns all instructors from the instructor_summary view.
+  // Filtering is done client-side — the dataset is small enough (~200 rows).
+  async getInstructors() {
+    const { data, error } = await db
+      .from('instructor_summary')
+      .select('*')
+      .order('name');
+    if (error) throw error;
+    return (data || []).map(r => ({
+      name:          r.name,
+      subjects:      r.subjects || [],
+      courseCount:   r.course_count || 0,
+      avgGpa:        r.avg_gpa != null ? parseFloat(r.avg_gpa) : null,
+      rmpRating:     r.rmp_rating != null ? parseFloat(r.rmp_rating) : null,
+      rmpDifficulty: r.rmp_difficulty != null ? parseFloat(r.rmp_difficulty) : null,
+      rmpCount:      r.rmp_count || 0,
+      rmpTags:       Array.isArray(r.rmp_tags) ? r.rmp_tags : [],
+      rmpReviews:    Array.isArray(r.rmp_reviews) ? r.rmp_reviews : [],
+      rmpId:         r.rmp_id || null,
+    }));
+  },
+
   // Returns the distinct subject codes present in the courses table.
   async getSubjects() {
     const { data, error } = await db

@@ -12,6 +12,8 @@ import ProfessorProfile from "./components/dashboard-prof.jsx";
 import AuthModal from "./components/auth-modal.jsx";
 import ProfileModal from "./components/profile-modal.jsx";
 import ProfilePage from "./components/profile-page.jsx";
+import InstructorsPage from "./components/instructors.jsx";
+import AboutPage from "./components/about.jsx";
 
 // Pages that require authentication
 const PROTECTED = new Set(["search", "schedule", "chatbot", "forums"]);
@@ -147,6 +149,12 @@ export default function App() {
     }
     if (page === "faqs") {
       return <FaqsPage darkMode={darkMode} setPage={navigateTo} />;
+    }
+    if (page === "instructors") {
+      return <InstructorsPage darkMode={darkMode} />;
+    }
+    if (page === "about") {
+      return <AboutPage darkMode={darkMode} setPage={navigateTo} />;
     }
     if (page === "schedule") {
       return (
