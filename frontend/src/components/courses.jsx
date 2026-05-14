@@ -162,6 +162,8 @@ function SectionBreakdown({ sections, darkMode }) {
   const [sortKey, setSortKey] = useState('year');
   const [sortDir, setSortDir] = useState('desc');
   const [instrFilter, setInstrFilter] = useState('');
+  const [showAll, setShowAll] = useState(false);
+  const LIMIT = 10;
 
   const colors = {
     border:   dm ? "#3d3050" : "#e5e0ea",
@@ -309,7 +311,7 @@ function SectionBreakdown({ sections, darkMode }) {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((s, i) => (
+            {(showAll ? sorted : sorted.slice(0, LIMIT)).map((s, i) => (
               <tr key={i} style={{
                 borderBottom: `1px solid ${colors.border}`,
                 background: i % 2 === 0 ? 'transparent' : colors.rowAlt,
@@ -333,6 +335,23 @@ function SectionBreakdown({ sections, darkMode }) {
           </tbody>
         </table>
       </div>
+
+      {sorted.length > LIMIT && (
+        <button
+          onClick={() => setShowAll(v => !v)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            marginTop: 10, padding: '7px 14px',
+            background: 'transparent', border: `1.5px solid ${colors.border}`,
+            borderRadius: 8, cursor: 'pointer', color: '#861F41',
+            fontWeight: 700, fontSize: 13, fontFamily: "'Plus Jakarta Sans', sans-serif",
+          }}
+        >
+          {showAll
+            ? `▲ Show fewer`
+            : `▼ Show ${sorted.length - LIMIT} more section${sorted.length - LIMIT !== 1 ? 's' : ''}`}
+        </button>
+      )}
     </div>
   );
 }
@@ -345,6 +364,8 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   const [sections, setSections] = useState([]);
   const [sectionsLoading, setSectionsLoading] = useState(true);
   const [tab, setTab] = useState('grades');
+  const [showAllInstructors, setShowAllInstructors] = useState(false);
+  const INSTR_LIMIT = 10;
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 700);
 
   useEffect(() => {
@@ -358,6 +379,7 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
     setDetailLoading(true);
     setDetail(null);
     setTab('grades');
+    setShowAllInstructors(false);
     API.getCourse(course.subject, course.number)
       .then(d => { setDetail(d); setDetailLoading(false); })
       .catch(() => setDetailLoading(false));
@@ -528,7 +550,8 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
               <div style={{ color: colors.sub, fontSize: 13, padding: "32px", textAlign: "center" }}>No instructor data on record.</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column" }}>
-                {profs.map((prof, idx) => {
+                {(showAllInstructors ? profs : profs.slice(0, INSTR_LIMIT)).map((prof, idx) => {
+                  const visibleCount = showAllInstructors ? profs.length : Math.min(profs.length, INSTR_LIMIT);
                   const topTags    = (prof.rmpTags || []).slice(0, 3);
                   const firstReview = (prof.rmpReviews || []).find(r => r.comment || r.text);
                   const snippet    = firstReview?.comment || firstReview?.text || null;
@@ -540,7 +563,7 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
                         display: "block", width: "100%", textAlign: "left",
                         padding: isMobile ? "14px 20px" : "16px 32px",
                         background: "transparent", border: "none",
-                        borderBottom: idx < profs.length - 1 ? `1px solid ${colors.border}` : "none",
+                        borderBottom: idx < visibleCount - 1 ? `1px solid ${colors.border}` : "none",
                         cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
                         transition: "background 0.12s",
                       }}
@@ -609,6 +632,25 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
                     </button>
                   );
                 })}
+              </div>
+            )}
+
+            {profs.length > INSTR_LIMIT && (
+              <div style={{ padding: isMobile ? "10px 20px 4px" : "10px 32px 4px" }}>
+                <button
+                  onClick={() => setShowAllInstructors(v => !v)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '7px 14px',
+                    background: 'transparent', border: `1.5px solid ${colors.border}`,
+                    borderRadius: 8, cursor: 'pointer', color: '#861F41',
+                    fontWeight: 700, fontSize: 13, fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  {showAllInstructors
+                    ? `▲ Show fewer`
+                    : `▼ Show ${profs.length - INSTR_LIMIT} more instructor${profs.length - INSTR_LIMIT !== 1 ? 's' : ''}`}
+                </button>
               </div>
             )}
           </div>
