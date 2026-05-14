@@ -37,11 +37,11 @@ function StatCard({ label, value, sub, accent, darkMode }) {
 function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRemove, setPage }) {
   const dm = darkMode;
   const colors = {
-    bg: dm ? "#16131a" : "#f8f7f5",
-    text: dm ? "#f0edf3" : "#1c1a1e",
-    sub: dm ? "#998ba8" : "#75787b",
-    border: dm ? "#3d3050" : "#e5e0ea",
-    card: dm ? "#221e27" : "white",
+    bg:     dm ? "#0a0a0a" : "#f8f7f5",
+    text:   dm ? "#f0edf3" : "#1c1a1e",
+    sub:    dm ? "rgba(255,255,255,0.38)" : "#75787b",
+    border: dm ? "rgba(255,255,255,0.08)" : "#e5e0ea",
+    card:   dm ? "#141414" : "white",
   };
 
   const sections = schedule.map(id => MOCK.sections.find(s => s.id === id)).filter(Boolean);
@@ -221,11 +221,11 @@ function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRem
 export default function ProfessorProfile({ prof, darkMode, onCourseClick, onClose }) {
   const dm = darkMode;
   const colors = {
-    bg: dm ? "#16131a" : "#ffffff",
-    text: dm ? "#f0edf3" : "#1c1a1e",
-    sub: dm ? "#998ba8" : "#75787b",
-    border: dm ? "#3d3050" : "#e5e0ea",
-    card: dm ? "#221e27" : "#f8f7f5",
+    bg:     dm ? "#0f0f0f" : "#ffffff",
+    text:   dm ? "#f0edf3" : "#1c1a1e",
+    sub:    dm ? "rgba(255,255,255,0.38)" : "#75787b",
+    border: dm ? "rgba(255,255,255,0.08)" : "#e5e0ea",
+    card:   dm ? "#141414" : "#f8f7f5",
   };
 
   const [courses, setCourses] = useState([]);
@@ -299,7 +299,7 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onClos
         <span style={{ fontSize: 13, color: colors.sub, fontWeight: 600 }}>{label}</span>
         <span style={{ fontSize: 13, fontWeight: 800, color: colors.text }}>{val.toFixed(1)} / 5</span>
       </div>
-      <div style={{ height: 8, background: dm ? "#3d3050" : "#e5e0ea", borderRadius: 4, overflow: "hidden" }}>
+      <div style={{ height: 8, background: dm ? "rgba(255,255,255,0.1)" : "#e5e0ea", borderRadius: 4, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${(val / 5) * 100}%`, background: "#861F41", borderRadius: 4, transition: "width 0.5s" }} />
       </div>
     </div>
@@ -384,7 +384,7 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onClos
                       <div style={{ fontSize: 12, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>Student Tags</div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                         {tags.map(t => (
-                          <span key={t} style={{ background: dm ? "#3d3050" : "#f0edf8", color: dm ? "#c8b8d8" : "#5a3a6a", borderRadius: 20, padding: "4px 10px", fontSize: 12, fontWeight: 700 }}>{t}</span>
+                          <span key={t} style={{ background: dm ? "rgba(255,255,255,0.08)" : "#f0edf8", color: dm ? "rgba(255,255,255,0.7)" : "#5a3a6a", borderRadius: 20, padding: "4px 10px", fontSize: 12, fontWeight: 700 }}>{t}</span>
                         ))}
                       </div>
                     </div>
@@ -558,7 +558,8 @@ function ReviewCard({ review, darkMode, colors }) {
         )}
         {className && (
           <span style={{
-            background: dm ? "#3d3050" : "#f0edf8", color: dm ? "#c8b8d8" : "#5a3a6a",
+            background: dm ? "rgba(255,255,255,0.08)" : "#f0edf8",
+            color: dm ? "rgba(255,255,255,0.65)" : "#5a3a6a",
             fontWeight: 700, fontSize: 12, padding: "3px 9px", borderRadius: 20,
           }}>{className}</span>
         )}
