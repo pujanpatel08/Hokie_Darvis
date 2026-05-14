@@ -344,8 +344,9 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   const [detailLoading, setDetailLoading] = useState(true);
   const [sections, setSections] = useState([]);
   const [sectionsLoading, setSectionsLoading] = useState(true);
-  const [showAllProfs, setShowAllProfs] = useState(false);
+  const [tab, setTab] = useState('grades');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 700);
+
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 700);
     window.addEventListener('resize', handler);
@@ -356,7 +357,7 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   useEffect(() => {
     setDetailLoading(true);
     setDetail(null);
-    setShowAllProfs(false);
+    setTab('grades');
     API.getCourse(course.subject, course.number)
       .then(d => { setDetail(d); setDetailLoading(false); })
       .catch(() => setDetailLoading(false));
@@ -471,123 +472,116 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
           )}
         </div>
 
-        {/* Professors — compact list */}
-        {profs.length > 0 && (
-          <div style={{ padding: isMobile ? "14px 20px" : "16px 32px", borderBottom: `1px solid ${colors.border}` }}>
-            <h3 style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-              Instructors
-              <span style={{ marginLeft: 6, fontWeight: 600, textTransform: "none", letterSpacing: 0, color: colors.sub, opacity: 0.7 }}>({profs.length})</span>
+        {/* Tab bar */}
+        <div style={{ display: "flex", borderBottom: `1px solid ${colors.border}`, padding: isMobile ? "0 20px" : "0 32px" }}>
+          {[
+            ['grades',      'Grades'],
+            ['instructors', `Instructors${profs.length ? ` (${profs.length})` : ''}`],
+            ['sections',    `Sections${!sectionsLoading && sections.length ? ` (${sections.length})` : ''}`],
+          ].map(([id, label]) => (
+            <button key={id} onClick={() => setTab(id)} style={{
+              background: "none", border: "none",
+              borderBottom: tab === id ? "2.5px solid #861F41" : "2.5px solid transparent",
+              color: tab === id ? "#861F41" : colors.sub,
+              fontWeight: tab === id ? 800 : 600,
+              fontSize: isMobile ? 13 : 14,
+              padding: isMobile ? "12px 14px 10px" : "14px 20px 12px",
+              cursor: "pointer", marginBottom: -1,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              transition: "color 0.15s",
+            }}>{label}</button>
+          ))}
+        </div>
+
+        {/* ── Grades tab ─────────────────────────────────── */}
+        {tab === 'grades' && (
+          <div style={{ padding: isMobile ? "16px 20px 24px" : "24px 32px 28px" }}>
+            <h3 style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+              Grade distribution — all sections
             </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              {(showAllProfs ? profs : profs.slice(0, 3)).map((prof) => (
-                <button key={prof.id} onClick={() => onProfClick(prof)} style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  padding: "7px 10px", margin: 0,
-                  background: "transparent", border: "none", borderRadius: 8,
-                  cursor: "pointer", textAlign: "left",
-                  transition: "background 0.12s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = dm ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                >
-                  {/* Avatar */}
-                  <div style={{
-                    width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                    background: `hsl(${(prof.name.charCodeAt(0) * 37) % 360}, 55%, 42%)`,
-                    color: "white", fontWeight: 800, fontSize: 12,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>{prof.name.charAt(0)}</div>
+            <GradeGrid dist={course.gradeDistribution} darkMode={dm} />
 
-                  {/* Name */}
-                  <span style={{ fontWeight: 600, fontSize: 13, color: colors.text, minWidth: 90 }}>{prof.name}</span>
-
-                  {/* RMP inline */}
-                  {prof.rmpRating != null ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <StarRating rating={prof.rmpRating} size={11} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "#861F41" }}>{prof.rmpRating.toFixed(1)}</span>
-                      <span style={{ fontSize: 11, color: colors.sub }}>· Diff {prof.rmpDifficulty?.toFixed(1) ?? "—"}</span>
-                      <span style={{ fontSize: 11, color: colors.sub }}>({prof.rmpCount})</span>
-                    </div>
-                  ) : (
-                    <span style={{ fontSize: 11, color: colors.sub, fontStyle: "italic" }}>No RMP data</span>
-                  )}
-
-                  {/* Arrow */}
-                  <span style={{ marginLeft: "auto", fontSize: 11, color: colors.sub, opacity: 0.5 }}>›</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Show more / less toggle */}
-            {profs.length > 3 && (
-              <button
-                onClick={() => setShowAllProfs(v => !v)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  marginTop: 4, padding: "6px 10px",
-                  background: "transparent", border: "none", borderRadius: 8,
-                  cursor: "pointer", color: "#861F41",
-                  fontWeight: 700, fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  transition: "background 0.12s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = dm ? "rgba(134,31,65,0.12)" : "rgba(134,31,65,0.06)"}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-              >
-                <span style={{ fontSize: 14, lineHeight: 1 }}>{showAllProfs ? "▲" : "▼"}</span>
-                {showAllProfs
-                  ? "Show fewer instructors"
-                  : `Show ${profs.length - 3} more instructor${profs.length - 3 === 1 ? "" : "s"}`
-                }
-              </button>
+            <h3 style={{ margin: "28px 0 12px", fontSize: 13, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+              Section-by-section breakdown
+              {detail && (
+                <span style={{ marginLeft: 8, fontWeight: 600, textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
+                  — {detail.rawSections.length} on record
+                </span>
+              )}
+            </h3>
+            {detailLoading ? (
+              <div style={{ color: colors.sub, fontSize: 13 }}>Loading…</div>
+            ) : detail && detail.rawSections.length > 0 ? (
+              <SectionBreakdown sections={detail.rawSections} darkMode={dm} />
+            ) : (
+              <div style={{ color: colors.sub, fontSize: 13 }}>No data available.</div>
             )}
           </div>
         )}
 
-        {/* Grade Distribution */}
-        <div style={{ padding: isMobile ? "16px 20px" : "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
-          <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>Grade Distribution (All Sections)</h3>
-          <GradeGrid dist={course.gradeDistribution} darkMode={dm} />
-        </div>
+        {/* ── Instructors tab ────────────────────────────── */}
+        {tab === 'instructors' && (
+          <div style={{ padding: isMobile ? "16px 20px 24px" : "20px 32px 28px" }}>
+            {detailLoading ? (
+              <div style={{ color: colors.sub, fontSize: 13, padding: "24px 0" }}>Loading…</div>
+            ) : profs.length === 0 ? (
+              <div style={{ color: colors.sub, fontSize: 13, padding: "24px 0", textAlign: "center" }}>No instructor data on record.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {profs.map(prof => (
+                  <button key={prof.id} onClick={() => onProfClick(prof)} style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "9px 10px", margin: 0,
+                    background: "transparent", border: "none", borderRadius: 8,
+                    cursor: "pointer", textAlign: "left",
+                    transition: "background 0.12s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = dm ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <div style={{
+                      width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                      background: `hsl(${(prof.name.charCodeAt(0) * 37) % 360}, 55%, 42%)`,
+                      color: "white", fontWeight: 800, fontSize: 13,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>{prof.name.charAt(0)}</div>
 
-        {/* Section Breakdown */}
-        <div style={{ padding: isMobile ? "16px 20px" : "20px 32px", borderBottom: `1px solid ${colors.border}` }}>
-          <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-            Section-by-Section Breakdown
-            {detail && <span style={{ marginLeft: 8, fontWeight: 600, textTransform: "none", letterSpacing: 0, fontSize: 13 }}>— {detail.rawSections.length} sections on record</span>}
-          </h3>
-          {detailLoading ? (
-            <div style={{ color: colors.sub, fontSize: 13 }}>Loading breakdown…</div>
-          ) : detail && detail.rawSections.length > 0 ? (
-            <SectionBreakdown sections={detail.rawSections} darkMode={dm} />
-          ) : (
-            <div style={{ color: colors.sub, fontSize: 13 }}>No section data available.</div>
-          )}
-        </div>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: colors.text, flex: 1, minWidth: 0 }}>{prof.name}</span>
 
-        {/* Sections — Fall 2026 */}
-        {!isMobile && (
-          <div style={{ padding: "20px 0 0" }}>
-            <h3 style={{ margin: "0 0 0", padding: "0 32px 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-              Available Sections — Fall 2026
-              {!sectionsLoading && sections.length > 0 && (
-                <span style={{ marginLeft: 8, fontWeight: 600, textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
-                  — {sections.length} section{sections.length !== 1 ? "s" : ""}
-                </span>
-              )}
-            </h3>
+                    {prof.rmpRating != null ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                        <StarRating rating={prof.rmpRating} size={12} />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#861F41" }}>{prof.rmpRating.toFixed(1)}</span>
+                        <span style={{ fontSize: 12, color: colors.sub }}>· Diff {prof.rmpDifficulty?.toFixed(1) ?? "—"}</span>
+                        <span style={{ fontSize: 12, color: colors.sub }}>({prof.rmpCount})</span>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 12, color: colors.sub, fontStyle: "italic", flexShrink: 0 }}>No RMP data</span>
+                    )}
+
+                    <span style={{ fontSize: 12, color: colors.sub, opacity: 0.5, marginLeft: 8 }}>›</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Sections tab ───────────────────────────────── */}
+        {tab === 'sections' && (
+          <div>
             <div style={{
               display: "grid", gridTemplateColumns: "70px 1fr 140px 100px 100px 90px",
-              gap: 12, padding: "8px 16px", fontSize: 11, fontWeight: 800,
+              gap: 12, padding: "10px 16px", fontSize: 11, fontWeight: 800,
               color: colors.sub, textTransform: "uppercase", letterSpacing: "0.5px",
               borderBottom: `1px solid ${colors.border}`,
             }}>
-              <div>CRN</div><div>Instructor</div><div>Time</div><div>Location</div><div>Seats</div><div>Action</div>
+              <div>CRN</div><div>Instructor</div><div>Time</div><div>Location</div><div>Seats</div><div></div>
             </div>
             {sectionsLoading ? (
-              <div style={{ padding: "24px 32px", color: colors.sub, fontSize: 13 }}>Loading sections…</div>
+              <div style={{ padding: "32px", color: colors.sub, fontSize: 13 }}>Loading sections…</div>
             ) : sections.length === 0 ? (
-              <div style={{ padding: "24px 32px", color: colors.sub, textAlign: "center", fontSize: 13 }}>No sections found for Fall 2026.</div>
+              <div style={{ padding: "32px", color: colors.sub, textAlign: "center", fontSize: 13 }}>No sections found for Fall 2026.</div>
             ) : sections.map(sec => (
               <SectionRow
                 key={sec.crn}
