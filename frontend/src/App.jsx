@@ -100,8 +100,9 @@ export default function App() {
     }
   };
 
-  const addSection    = id => { if (!schedule.includes(id)) setSchedule(prev => [...prev, id]); };
-  const removeSection = id => setSchedule(prev => prev.filter(x => x !== id));
+  // schedule is now an array of full section objects {crn, subject, courseNumber, days, startTime, ...}
+  const addSection    = sec => { if (!schedule.some(s => s.crn === sec.crn)) setSchedule(prev => [...prev, sec]); };
+  const removeSection = crn => setSchedule(prev => prev.filter(s => s.crn !== crn));
 
   const openCourse = course => setSelectedCourse(course);
 
@@ -177,7 +178,6 @@ export default function App() {
           darkMode={darkMode}
           schedule={schedule}
           onAdd={addSection} onRemove={removeSection}
-          onCourseClick={openCourse} onProfClick={openProf}
           setPage={navigateTo}
         />
       );

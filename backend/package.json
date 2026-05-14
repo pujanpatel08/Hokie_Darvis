@@ -5,7 +5,8 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "import-grades": "node scripts/import_grades.js"
+    "import-grades": "node scripts/import_grades.js",
+    "import-timetable": "node scripts/import_timetable.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.43.4",

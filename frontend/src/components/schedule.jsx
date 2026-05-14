@@ -1,6 +1,5 @@
 // Schedule Builder component
-import { useState, useEffect, useMemo } from "react";
-import { MOCK } from "../mock-data.js";
+import { useState, useEffect } from "react";
 import { ClockIcon, MapPinIcon, UserIcon, AlertTriangleIcon, CalendarIcon, GridIcon, ListIcon } from "./icons.jsx";
 
 const DAYS = ["Mon","Tue","Wed","Thu","Fri"];
@@ -32,7 +31,15 @@ function minsToPct(mins) {
   return (mins / TOTAL_MINS) * 100;
 }
 
-function formatTime(t) { return MOCK.formatTime(t); }
+// "14:30" → "2:30 PM"
+function formatTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return t;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour   = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+}
 
 function hasConflict(sections) {
   for (let i = 0; i < sections.length; i++) {
@@ -42,14 +49,14 @@ function hasConflict(sections) {
       if (!sharedDay) continue;
       const aStart = timeToMins(a.startTime), aEnd = timeToMins(a.endTime);
       const bStart = timeToMins(b.startTime), bEnd = timeToMins(b.endTime);
-      if (aStart < bEnd && bStart < aEnd) return [a.id, b.id];
+      if (aStart < bEnd && bStart < aEnd) return [a.crn, b.crn];
     }
   }
   return null;
 }
 
 // ── Schedule Grid View ────────────────────────────────────────────
-function ScheduleGrid({ sections, colorMap, darkMode, onRemove, onCourseClick }) {
+function ScheduleGrid({ sections, colorMap, darkMode, onRemove }) {
   const colors = {
     bg: "#111111",
     border: "rgba(255,255,255,0.08)",
@@ -129,26 +136,27 @@ function ScheduleGrid({ sections, colorMap, darkMode, onRemove, onCourseClick })
             ))}
             {/* Course blocks */}
             {blocksByDay[day].map(sec => {
+              if (!sec.startTime || !sec.endTime) return null;
               const startMins = timeToMins(sec.startTime) - START_HOUR * 60;
               const endMins = timeToMins(sec.endTime) - START_HOUR * 60;
-              const top = (startMins / (TOTAL_MINS)) * gridHeight;
+              if (startMins < 0 || endMins <= startMins) return null;
+              const top = (startMins / TOTAL_MINS) * gridHeight;
               const height = Math.max(((endMins - startMins) / TOTAL_MINS) * gridHeight, 24);
-              const course = MOCK.getCourse(sec.courseId);
-              const colIdx = colorMap[sec.courseId] || 0;
+              const courseKey = `${sec.subject}-${sec.courseNumber}`;
+              const colIdx = colorMap[courseKey] || 0;
               const col = COURSE_COLORS[colIdx % COURSE_COLORS.length];
               return (
-                <div key={sec.id + day}
-                  onClick={() => onCourseClick && onCourseClick(course)}
+                <div key={sec.crn + day}
                   style={{
                     position: "absolute", left: 3, right: 3, top, height,
                     background: col.bg, border: `2px solid ${col.border}`,
                     borderRadius: 8, padding: "4px 7px", overflow: "hidden",
-                    cursor: "pointer", zIndex: 2,
+                    cursor: "default", zIndex: 2,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   }}
                 >
                   <div style={{ fontWeight: 800, fontSize: 11, color: col.text, lineHeight: 1.2 }}>
-                    {course?.subject} {course?.number}
+                    {sec.subject} {sec.courseNumber}
                   </div>
                   {height > 36 && (
                     <div style={{ fontSize: 10, color: col.text, opacity: 0.8, lineHeight: 1.2 }}>
@@ -171,17 +179,14 @@ function ScheduleGrid({ sections, colorMap, darkMode, onRemove, onCourseClick })
 }
 
 // ── Schedule List View ────────────────────────────────────────────
-function ScheduleList({ sections, colorMap, darkMode, onRemove, onCourseClick, onProfClick }) {
+function ScheduleList({ sections, colorMap, darkMode, onRemove }) {
   const colors = {
     bg: "#111111",
     border: "rgba(255,255,255,0.08)",
     text: "#f0edf3",
     sub: "rgba(255,255,255,0.38)",
   };
-  const totalCredits = sections.reduce((s, sec) => {
-    const c = MOCK.getCourse(sec.courseId);
-    return s + (c ? c.credits : 0);
-  }, 0);
+  const totalCredits = sections.reduce((s, sec) => s + (parseFloat(sec.credits) || 0), 0);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -195,12 +200,11 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove, onCourseClick, o
       </div>
 
       {sections.map(sec => {
-        const course = MOCK.getCourse(sec.courseId);
-        const prof = MOCK.getProf(sec.profId);
-        const colIdx = colorMap[sec.courseId] || 0;
+        const courseKey = `${sec.subject}-${sec.courseNumber}`;
+        const colIdx = colorMap[courseKey] || 0;
         const col = COURSE_COLORS[colIdx % COURSE_COLORS.length];
         return (
-          <div key={sec.id} style={{
+          <div key={sec.crn} style={{
             background: colors.bg, border: `1.5px solid ${colors.border}`,
             borderRadius: 14, overflow: "hidden",
             boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
@@ -210,30 +214,29 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove, onCourseClick, o
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                   <span style={{ background: col.border, color: "white", borderRadius: 7, padding: "3px 10px", fontWeight: 800, fontSize: 12 }}>
-                    {course?.subject} {course?.number}
+                    {sec.subject} {sec.courseNumber}
                   </span>
                   <span style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 12, padding: "3px 8px", borderRadius: 7 }}>
-                    {course?.credits} cr
+                    {sec.credits} cr
                   </span>
                   <span style={{ fontFamily: "monospace", fontSize: 11, color: colors.sub }}>CRN: {sec.crn}</span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 15, color: colors.text, marginBottom: 6, cursor: "pointer" }}
-                  onClick={() => onCourseClick(course)}
-                >{course?.title}</div>
                 <div style={{ display: "flex", gap: 16, fontSize: 13, color: colors.sub, flexWrap: "wrap" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><ClockIcon size={13} />{sec.days.map(d => DAY_MAP[d] || d).join(", ")} · {formatTime(sec.startTime)} – {formatTime(sec.endTime)}</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><MapPinIcon size={13} />{sec.location}</span>
-                  {prof && (
-                    <button onClick={() => onProfClick(prof)} style={{
-                      background: "none", border: "none", cursor: "pointer", padding: 0,
-                      color: "#861F41", fontWeight: 600, fontSize: 13,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      display: "flex", alignItems: "center", gap: 5,
-                    }}><UserIcon size={13} color="#861F41" />{prof.name}</button>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <ClockIcon size={13} />
+                    {sec.days.map(d => DAY_MAP[d] || d).join(", ")} · {formatTime(sec.startTime)} – {formatTime(sec.endTime)}
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <MapPinIcon size={13} />{sec.location}
+                  </span>
+                  {sec.instructor && (
+                    <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <UserIcon size={13} />{sec.instructor}
+                    </span>
                   )}
                 </div>
               </div>
-              <button onClick={() => onRemove(sec.id)} style={{
+              <button onClick={() => onRemove(sec.crn)} style={{
                 background: "rgba(192,57,43,0.18)", color: "#f87171", border: "1.5px solid rgba(248,113,113,0.2)",
                 borderRadius: 8, padding: "7px 14px", cursor: "pointer",
                 fontWeight: 700, fontSize: 13, fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -248,7 +251,7 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove, onCourseClick, o
 }
 
 // ── Schedule Builder Page ─────────────────────────────────────────
-function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, onProfClick, setPage }) {
+function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, setPage }) {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [view, setView] = useState(() => window.innerWidth < 768 ? "list" : "grid");
   const dm = darkMode;
@@ -268,10 +271,11 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
     border: "rgba(255,255,255,0.08)",
   };
 
-  const sections = schedule.map(id => MOCK.sections.find(s => s.id === id)).filter(Boolean);
-  const courseIds = [...new Set(sections.map(s => s.courseId))];
+  // schedule is already an array of full section objects
+  const sections = schedule;
+  const courseKeys = [...new Set(sections.map(s => `${s.subject}-${s.courseNumber}`))];
   const colorMap = {};
-  courseIds.forEach((id, i) => colorMap[id] = i);
+  courseKeys.forEach((key, i) => colorMap[key] = i);
 
   const conflict = hasConflict(sections);
 
@@ -282,7 +286,7 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <h1 style={{ margin: "0 0 4px", color: "white", fontWeight: 800, fontSize: isMobile ? 22 : 26 }}>Schedule Builder</h1>
           <p style={{ margin: 0, color: "rgba(255,255,255,0.38)", fontSize: 14 }}>
-            Fall 2025 · {sections.length} section{sections.length !== 1 ? "s" : ""} · {courseIds.length} course{courseIds.length !== 1 ? "s" : ""}
+            Fall 2026 · {sections.length} section{sections.length !== 1 ? "s" : ""} · {courseKeys.length} course{courseKeys.length !== 1 ? "s" : ""}
           </p>
         </div>
       </div>
@@ -331,11 +335,11 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, onCourseClick, o
             {view === "grid" ? (
               <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
                 <div style={{ minWidth: 600 }}>
-                  <ScheduleGrid sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} onCourseClick={onCourseClick} />
+                  <ScheduleGrid sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} />
                 </div>
               </div>
             ) : (
-              <ScheduleList sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} onCourseClick={onCourseClick} onProfClick={onProfClick} />
+              <ScheduleList sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} />
             )}
           </>
         )}

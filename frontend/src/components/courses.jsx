@@ -89,13 +89,19 @@ export function GradeGrid({ dist, darkMode }) {
 }
 
 // ── Section Row ───────────────────────────────────────────────────
-function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, darkMode }) {
-  const prof = MOCK.getProf(section.profId);
+function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, rmpMap, darkMode }) {
   const dm = darkMode;
   const colors = dm
     ? { border: "rgba(255,255,255,0.08)", text: "#f0edf3", sub: "rgba(255,255,255,0.38)" }
     : { border: "rgba(20,16,12,0.10)",   text: "#1a1210", sub: "rgba(20,16,12,0.55)" };
-  const full = section.enrolled >= section.seats;
+  const full = section.seats > 0 ? section.enrolled >= section.seats : false;
+  const instrName = section.instructor || 'Staff';
+  const rmp = rmpMap?.[instrName];
+
+  // Build a prof-shaped object for onProfClick (reuses the professor modal)
+  const profObj = rmp
+    ? { id: instrName, name: instrName, rmpRating: rmp.rmp_rating, rmpDifficulty: rmp.rmp_difficulty, rmpCount: rmp.rmp_count, rmpTags: rmp.rmp_tags ?? [], rmpReviews: rmp.rmp_reviews ?? [], rmpId: rmp.rmp_id ?? null }
+    : null;
 
   return (
     <div style={{
@@ -106,28 +112,37 @@ function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, darkMod
     }}>
       <div style={{ fontFamily: "monospace", fontWeight: 700, color: "#861F41", fontSize: 12 }}>{section.crn}</div>
       <div>
-        <button onClick={() => onProfClick(prof)} style={{
-          background: "none", border: "none", cursor: "pointer", padding: 0,
-          color: colors.text, fontWeight: 600, fontSize: 13, textDecoration: "underline",
-          fontFamily: "'Plus Jakarta Sans', sans-serif", textAlign: "left",
-        }}>{prof?.name || "Staff"}</button>
-        {prof && <div style={{ marginTop: 2 }}><RmpMini prof={prof} onClick={onProfClick} /></div>}
+        {profObj ? (
+          <button onClick={() => onProfClick(profObj)} style={{
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+            color: colors.text, fontWeight: 600, fontSize: 13, textDecoration: "underline",
+            fontFamily: "'Plus Jakarta Sans', sans-serif", textAlign: "left",
+          }}>{instrName}</button>
+        ) : (
+          <span style={{ fontWeight: 600, fontSize: 13, color: colors.text }}>{instrName}</span>
+        )}
+        {rmp?.rmp_rating != null && (
+          <div style={{ marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+            <StarRating rating={rmp.rmp_rating} size={11} />
+            <span style={{ fontWeight: 700, fontSize: 11, color: "#861F41" }}>{rmp.rmp_rating.toFixed(1)}</span>
+          </div>
+        )}
       </div>
       <div style={{ color: colors.text, fontSize: 12 }}>
-        <div style={{ fontWeight: 700 }}>{section.days.join("")} {MOCK.formatTime(section.startTime)}</div>
-        <div style={{ color: colors.sub }}>→ {MOCK.formatTime(section.endTime)}</div>
+        <div style={{ fontWeight: 700 }}>{section.days.join(" ")} {section.startTime}</div>
+        <div style={{ color: colors.sub }}>→ {section.endTime}</div>
       </div>
       <div style={{ color: colors.sub, fontSize: 12 }}>{section.location}</div>
       <div><SeatsBadge seats={section.seats} enrolled={section.enrolled} /></div>
       <div>
         {inSchedule ? (
-          <button onClick={() => onRemove(section.id)} style={{
+          <button onClick={() => onRemove(section.crn)} style={{
             background: "rgba(192,57,43,0.18)", color: "#f87171", border: "1px solid rgba(248,113,113,0.3)",
             borderRadius: 7, padding: "5px 12px", cursor: "pointer",
             fontWeight: 700, fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}>Remove</button>
         ) : (
-          <button onClick={() => !full && onAdd(section.id)} disabled={full} style={{
+          <button onClick={() => !full && onAdd(section)} disabled={full} style={{
             background: full ? "rgba(255,255,255,0.06)" : "#861F41",
             color: full ? colors.sub : "white", border: "none",
             borderRadius: 7, padding: "5px 12px",
@@ -327,6 +342,8 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   const dm = darkMode;
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(true);
+  const [sections, setSections] = useState([]);
+  const [sectionsLoading, setSectionsLoading] = useState(true);
   const [showAllProfs, setShowAllProfs] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 700);
   useEffect(() => {
@@ -335,7 +352,7 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
     return () => window.removeEventListener('resize', handler);
   }, []);
 
-  // Fetch full grade detail + RMP data in one call
+  // Fetch full grade detail + RMP data
   useEffect(() => {
     setDetailLoading(true);
     setDetail(null);
@@ -345,24 +362,30 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
       .catch(() => setDetailLoading(false));
   }, [course.subject, course.number]);
 
-  // Build instructor list from real sections data (rmpMap comes from API.getCourse now)
+  // Fetch Fall 2026 sections from the sections table
+  useEffect(() => {
+    setSectionsLoading(true);
+    setSections([]);
+    API.getSections(course.subject, course.number)
+      .then(rows => { setSections(rows); setSectionsLoading(false); })
+      .catch(() => setSectionsLoading(false));
+  }, [course.subject, course.number]);
+
+  // Build instructor list from real grade data (rmpMap comes from API.getCourse)
   const rmpMap = detail?.rmpMap || {};
   const instructorNames = detail
     ? [...new Set(detail.rawSections.map(s => s.instructor).filter(s => s && s !== 'Unknown'))]
     : [];
-  const sections = MOCK.getSections(course.id);
-  const profs = instructorNames.length > 0
-    ? instructorNames.map(name => ({
-        id: name,
-        name,
-        rmpRating:    rmpMap[name]?.rmp_rating    ?? null,
-        rmpDifficulty: rmpMap[name]?.rmp_difficulty ?? null,
-        rmpCount:     rmpMap[name]?.rmp_count      ?? 0,
-        rmpTags:      rmpMap[name]?.rmp_tags       ?? [],
-        rmpReviews:   rmpMap[name]?.rmp_reviews    ?? [],
-        rmpId:        rmpMap[name]?.rmp_id         ?? null,
-      }))
-    : [...new Set(sections.map(s => s.profId))].map(id => MOCK.getProf(id)).filter(Boolean);
+  const profs = instructorNames.map(name => ({
+    id: name,
+    name,
+    rmpRating:     rmpMap[name]?.rmp_rating    ?? null,
+    rmpDifficulty: rmpMap[name]?.rmp_difficulty ?? null,
+    rmpCount:      rmpMap[name]?.rmp_count      ?? 0,
+    rmpTags:       rmpMap[name]?.rmp_tags       ?? [],
+    rmpReviews:    rmpMap[name]?.rmp_reviews    ?? [],
+    rmpId:         rmpMap[name]?.rmp_id         ?? null,
+  }));
   const colors = dm ? {
     bg:      "#0f0f0f",
     surface: "#141414",
@@ -542,11 +565,16 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
           )}
         </div>
 
-        {/* Sections — hidden on mobile to keep the sheet manageable */}
+        {/* Sections — Fall 2026 */}
         {!isMobile && (
           <div style={{ padding: "20px 0 0" }}>
             <h3 style={{ margin: "0 0 0", padding: "0 32px 14px", fontSize: 14, fontWeight: 800, color: colors.sub, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-              Available Sections — Fall 2025
+              Available Sections — Fall 2026
+              {!sectionsLoading && sections.length > 0 && (
+                <span style={{ marginLeft: 8, fontWeight: 600, textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
+                  — {sections.length} section{sections.length !== 1 ? "s" : ""}
+                </span>
+              )}
             </h3>
             <div style={{
               display: "grid", gridTemplateColumns: "70px 1fr 140px 100px 100px 90px",
@@ -556,16 +584,19 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
             }}>
               <div>CRN</div><div>Instructor</div><div>Time</div><div>Location</div><div>Seats</div><div>Action</div>
             </div>
-            {sections.length === 0 ? (
-              <div style={{ padding: "24px 32px", color: colors.sub, textAlign: "center" }}>No sections available this term.</div>
+            {sectionsLoading ? (
+              <div style={{ padding: "24px 32px", color: colors.sub, fontSize: 13 }}>Loading sections…</div>
+            ) : sections.length === 0 ? (
+              <div style={{ padding: "24px 32px", color: colors.sub, textAlign: "center", fontSize: 13 }}>No sections found for Fall 2026.</div>
             ) : sections.map(sec => (
               <SectionRow
-                key={sec.id}
+                key={sec.crn}
                 section={sec}
                 onAdd={onAdd}
                 onRemove={onRemove}
-                inSchedule={schedule.includes(sec.id)}
+                inSchedule={schedule.some(s => s.crn === sec.crn)}
                 onProfClick={onProfClick}
+                rmpMap={rmpMap}
                 darkMode={dm}
               />
             ))}
@@ -580,12 +611,9 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
 // Minimal, magazine-style: hairline border, generous whitespace, eyebrow + heavy title.
 function CourseCard({ course, darkMode, onClick, onProfClick }) {
   const dm = darkMode;
-  const sections = MOCK.getSections(course.id);
-  const profIds = [...new Set(sections.map(s => s.profId))];
-  const profs = profIds.map(id => MOCK.getProf(id)).filter(Boolean);
-  const totalSeats = sections.reduce((s, sec) => s + sec.seats, 0);
-  const totalEnrolled = sections.reduce((s, sec) => s + sec.enrolled, 0);
-  const seatsLeft = totalSeats - totalEnrolled;
+  // Section count comes from the aggregated courses row.
+  // Seat availability requires a live sections query — shown in the detail modal instead.
+  const sectionCount = course.totalSections || 0;
 
   const c = dm ? {
     bg:       "transparent",
@@ -643,13 +671,12 @@ function CourseCard({ course, darkMode, onClick, onProfClick }) {
         color: c.text, lineHeight: 1.32, letterSpacing: "-0.3px",
       }}>{course.title}</h3>
 
-      {/* Professors — first one only, kept light */}
-      {profs.length > 0 && (
+      {/* Instructors — shown if available in course data */}
+      {course.instructors && course.instructors.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: c.sub, fontWeight: 500 }}>{profs[0].name}</span>
-          <RmpMini prof={profs[0]} onClick={onProfClick} />
-          {profs.length > 1 && (
-            <span style={{ fontSize: 11, color: c.faint, fontWeight: 600 }}>+{profs.length - 1} more</span>
+          <span style={{ fontSize: 12, color: c.sub, fontWeight: 500 }}>{course.instructors[0]}</span>
+          {course.instructors.length > 1 && (
+            <span style={{ fontSize: 11, color: c.faint, fontWeight: 600 }}>+{course.instructors.length - 1} more</span>
           )}
         </div>
       )}
@@ -675,10 +702,7 @@ function CourseCard({ course, darkMode, onClick, onProfClick }) {
         marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${c.divider}`,
         fontSize: 11, fontWeight: 600, color: c.sub, letterSpacing: "0.2px",
       }}>
-        <span>{course.credits} cr · {sections.length} section{sections.length !== 1 ? "s" : ""}</span>
-        <span style={{ color: seatsLeft <= 0 ? "#f87171" : seatsLeft < 10 ? "#fbbf24" : c.sub }}>
-          {seatsLeft <= 0 ? "Full" : `${seatsLeft} seats`}
-        </span>
+        <span>{course.credits} cr · {sectionCount} section{sectionCount !== 1 ? "s" : ""}</span>
       </div>
     </div>
   );
