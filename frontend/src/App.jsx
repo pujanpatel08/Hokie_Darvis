@@ -29,11 +29,9 @@ export default function App() {
   });
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedProf,   setSelectedProf]   = useState(null);
-  const [profReturnPage, setProfReturnPage]  = useState("search");
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [pendingPage, setPendingPage] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [profReturnCourse, setProfReturnCourse] = useState(null);
 
   // Persist schedule and theme
   useEffect(() => {
@@ -106,23 +104,9 @@ export default function App() {
 
   const openCourse = course => setSelectedCourse(course);
 
-  const openProf = prof => {
-    setSelectedProf(prof);
-    setProfReturnPage(page);
-    setProfReturnCourse(selectedCourse);  // remember which course was open
-    setSelectedCourse(null);
-    setPage("professor");
-  };
-
-  const closeProf = () => {
-    setPage(profReturnPage || "search");
-    setSelectedProf(null);
-    // Reopen the course detail modal if professor was opened from one
-    if (profReturnCourse) {
-      setSelectedCourse(profReturnCourse);
-      setProfReturnCourse(null);
-    }
-  };
+  // Prof opens as an overlay modal on top of whatever is showing — no page change needed.
+  const openProf  = prof => setSelectedProf(prof);
+  const closeProf = ()   => setSelectedProf(null);
 
   // Show nothing until Clerk finishes loading (avoids auth gate flash)
   if (!authLoaded) {
@@ -163,14 +147,6 @@ export default function App() {
     }
     if (page === "faqs") {
       return <FaqsPage darkMode={darkMode} setPage={navigateTo} />;
-    }
-    if (page === "professor" && selectedProf) {
-      return (
-        <ProfessorProfile
-          prof={selectedProf} darkMode={darkMode}
-          onCourseClick={openCourse} onBack={closeProf}
-        />
-      );
     }
     if (page === "schedule") {
       return (
@@ -222,6 +198,13 @@ export default function App() {
           onAdd={addSection} onRemove={removeSection}
           onClose={() => setSelectedCourse(null)}
           onProfClick={openProf}
+        />
+      )}
+
+      {selectedProf && (
+        <ProfessorProfile
+          prof={selectedProf} darkMode={darkMode}
+          onCourseClick={openCourse} onClose={closeProf}
         />
       )}
 

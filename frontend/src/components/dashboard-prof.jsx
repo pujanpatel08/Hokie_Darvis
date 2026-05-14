@@ -218,14 +218,14 @@ function Dashboard({ user, schedule, darkMode, onCourseClick, onProfClick, onRem
 }
 
 // ── Professor Profile ─────────────────────────────────────────────
-export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack }) {
+export default function ProfessorProfile({ prof, darkMode, onCourseClick, onClose }) {
   const dm = darkMode;
   const colors = {
-    bg: dm ? "#16131a" : "#f8f7f5",
+    bg: dm ? "#16131a" : "#ffffff",
     text: dm ? "#f0edf3" : "#1c1a1e",
     sub: dm ? "#998ba8" : "#75787b",
     border: dm ? "#3d3050" : "#e5e0ea",
-    card: dm ? "#221e27" : "white",
+    card: dm ? "#221e27" : "#f8f7f5",
   };
 
   const [courses, setCourses] = useState([]);
@@ -306,37 +306,63 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
   );
 
   return (
-    <div style={{ background: colors.bg, minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #6b1833 0%, #861F41 60%, #a02850 100%)", padding: isMobile ? "20px 16px 18px" : "32px 24px 28px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <button onClick={onBack} style={{
-            background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8,
-            color: "white", padding: "6px 14px", cursor: "pointer",
-            fontWeight: 600, fontSize: 13, fontFamily: "'Plus Jakarta Sans', sans-serif",
-            marginBottom: 14,
-          }}>← Back</button>
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 14 : 20 }}>
-            <div style={{
-              width: isMobile ? 52 : 72, height: isMobile ? 52 : 72, borderRadius: "50%",
-              background: "#f0c050", color: "#861F41",
-              fontWeight: 900, fontSize: isMobile ? 22 : 28,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              border: "3px solid rgba(255,255,255,0.3)", flexShrink: 0,
-            }}>{(prof?.name || "?").charAt(0)}</div>
-            <div>
-              <h1 style={{ margin: 0, color: "white", fontWeight: 800, fontSize: isMobile ? 20 : 24 }}>{prof?.name}</h1>
-              {dept && (
-                <div style={{ color: "rgba(255,255,255,0.75)", fontSize: isMobile ? 13 : 15, marginTop: 3 }}>
-                  {deptNames[dept] ? `Department of ${deptNames[dept]}` : dept}
-                </div>
-              )}
+    <div
+      onClick={e => e.target === e.currentTarget && onClose()}
+      style={{
+        position: "fixed", inset: 0, zIndex: 400,
+        background: "rgba(0,0,0,0.6)",
+        display: "flex", alignItems: "flex-start", justifyContent: "center",
+        padding: isMobile ? 0 : "32px 24px",
+        overflowY: "auto",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
+    >
+      <div style={{
+        background: colors.bg,
+        borderRadius: isMobile ? "20px 20px 0 0" : 20,
+        boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+        width: "100%", maxWidth: 960,
+        border: `1px solid ${dm ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+        marginBottom: isMobile ? 0 : 40,
+        ...(isMobile ? { position: "absolute", bottom: 0, left: 0, right: 0, maxHeight: "92vh", overflowY: "auto" } : {}),
+      }}>
+        {/* Mobile drag handle */}
+        {isMobile && (
+          <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 0" }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: dm ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)" }} />
+          </div>
+        )}
+
+        {/* Header */}
+        <div style={{ background: "linear-gradient(135deg, #6b1833 0%, #861F41 60%, #a02850 100%)", padding: isMobile ? "16px 20px 20px" : "28px 32px 24px", borderRadius: isMobile ? 0 : "20px 20px 0 0" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 16 }}>
+              <div style={{
+                width: isMobile ? 48 : 64, height: isMobile ? 48 : 64, borderRadius: "50%",
+                background: "#f0c050", color: "#861F41",
+                fontWeight: 900, fontSize: isMobile ? 20 : 26,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: "3px solid rgba(255,255,255,0.3)", flexShrink: 0,
+              }}>{(prof?.name || "?").charAt(0)}</div>
+              <div>
+                <h2 style={{ margin: 0, color: "white", fontWeight: 800, fontSize: isMobile ? 18 : 22 }}>{prof?.name}</h2>
+                {dept && (
+                  <div style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, marginTop: 3 }}>
+                    {deptNames[dept] ? `Department of ${deptNames[dept]}` : dept}
+                  </div>
+                )}
+              </div>
             </div>
+            <button onClick={onClose} style={{
+              background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8,
+              color: "white", width: 34, height: 34, cursor: "pointer",
+              fontSize: 17, display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>✕</button>
           </div>
         </div>
-      </div>
 
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "16px 14px" : "28px 24px" }}>
+      <div style={{ padding: isMobile ? "16px 16px 24px" : "24px 32px 32px" }}>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "300px 1fr", gap: 20, alignItems: "flex-start" }}>
           {/* Left: RMP card */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -497,6 +523,7 @@ export default function ProfessorProfile({ prof, darkMode, onCourseClick, onBack
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

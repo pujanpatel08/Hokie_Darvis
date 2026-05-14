@@ -521,47 +521,94 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
 
         {/* ── Instructors tab ────────────────────────────── */}
         {tab === 'instructors' && (
-          <div style={{ padding: isMobile ? "16px 20px 24px" : "20px 32px 28px" }}>
+          <div style={{ padding: isMobile ? "12px 0 16px" : "16px 0 20px" }}>
             {detailLoading ? (
-              <div style={{ color: colors.sub, fontSize: 13, padding: "24px 0" }}>Loading…</div>
+              <div style={{ color: colors.sub, fontSize: 13, padding: "24px 32px" }}>Loading…</div>
             ) : profs.length === 0 ? (
-              <div style={{ color: colors.sub, fontSize: 13, padding: "24px 0", textAlign: "center" }}>No instructor data on record.</div>
+              <div style={{ color: colors.sub, fontSize: 13, padding: "32px", textAlign: "center" }}>No instructor data on record.</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                {profs.map(prof => (
-                  <button key={prof.id} onClick={() => onProfClick(prof)} style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    padding: "9px 10px", margin: 0,
-                    background: "transparent", border: "none", borderRadius: 8,
-                    cursor: "pointer", textAlign: "left",
-                    transition: "background 0.12s",
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = dm ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                  >
-                    <div style={{
-                      width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-                      background: `hsl(${(prof.name.charCodeAt(0) * 37) % 360}, 55%, 42%)`,
-                      color: "white", fontWeight: 800, fontSize: 13,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>{prof.name.charAt(0)}</div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {profs.map((prof, idx) => {
+                  const topTags    = (prof.rmpTags || []).slice(0, 3);
+                  const firstReview = (prof.rmpReviews || []).find(r => r.comment || r.text);
+                  const snippet    = firstReview?.comment || firstReview?.text || null;
+                  return (
+                    <button
+                      key={prof.id}
+                      onClick={() => onProfClick(prof)}
+                      style={{
+                        display: "block", width: "100%", textAlign: "left",
+                        padding: isMobile ? "14px 20px" : "16px 32px",
+                        background: "transparent", border: "none",
+                        borderBottom: idx < profs.length - 1 ? `1px solid ${colors.border}` : "none",
+                        cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        transition: "background 0.12s",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = dm ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.025)"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      {/* Top row: avatar + name + rating */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: prof.rmpRating != null || topTags.length > 0 || snippet ? 10 : 0 }}>
+                        <div style={{
+                          width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                          background: `hsl(${(prof.name.charCodeAt(0) * 37) % 360}, 50%, 42%)`,
+                          color: "white", fontWeight: 800, fontSize: 14,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>{prof.name.charAt(0)}</div>
 
-                    <span style={{ fontWeight: 600, fontSize: 14, color: colors.text, flex: 1, minWidth: 0 }}>{prof.name}</span>
+                        <span style={{ fontWeight: 700, fontSize: 15, color: colors.text, flex: 1 }}>{prof.name}</span>
 
-                    {prof.rmpRating != null ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                        <StarRating rating={prof.rmpRating} size={12} />
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "#861F41" }}>{prof.rmpRating.toFixed(1)}</span>
-                        <span style={{ fontSize: 12, color: colors.sub }}>· Diff {prof.rmpDifficulty?.toFixed(1) ?? "—"}</span>
-                        <span style={{ fontSize: 12, color: colors.sub }}>({prof.rmpCount})</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                          {prof.rmpRating != null ? (
+                            <>
+                              <div style={{
+                                background: prof.rmpRating >= 4 ? "#dcfce7" : prof.rmpRating >= 3 ? "#fef3c7" : "#fee2e2",
+                                color: prof.rmpRating >= 4 ? "#1a7a38" : prof.rmpRating >= 3 ? "#b45309" : "#c0392b",
+                                fontWeight: 800, fontSize: 14, padding: "3px 10px", borderRadius: 20,
+                              }}>{prof.rmpRating.toFixed(1)}</div>
+                              <StarRating rating={prof.rmpRating} size={12} />
+                              {prof.rmpDifficulty != null && (
+                                <span style={{ fontSize: 12, color: colors.sub, whiteSpace: "nowrap" }}>
+                                  Diff {prof.rmpDifficulty.toFixed(1)}
+                                </span>
+                              )}
+                              <span style={{ fontSize: 12, color: colors.sub, whiteSpace: "nowrap" }}>
+                                ({prof.rmpCount})
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: 12, color: colors.sub, fontStyle: "italic" }}>No RMP data</span>
+                          )}
+                          <span style={{ fontSize: 13, color: colors.sub, opacity: 0.45 }}>›</span>
+                        </div>
                       </div>
-                    ) : (
-                      <span style={{ fontSize: 12, color: colors.sub, fontStyle: "italic", flexShrink: 0 }}>No RMP data</span>
-                    )}
 
-                    <span style={{ fontSize: 12, color: colors.sub, opacity: 0.5, marginLeft: 8 }}>›</span>
-                  </button>
-                ))}
+                      {/* Tags */}
+                      {topTags.length > 0 && (
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: snippet ? 8 : 0, paddingLeft: 48 }}>
+                          {topTags.map(tag => (
+                            <span key={tag} style={{
+                              background: dm ? "rgba(255,255,255,0.07)" : "#f0edf8",
+                              color: dm ? "#c8b8d8" : "#5a3a6a",
+                              fontSize: 11, fontWeight: 700,
+                              padding: "3px 9px", borderRadius: 20,
+                            }}>{tag}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Review snippet */}
+                      {snippet && (
+                        <p style={{
+                          margin: "0 0 0 48px", fontSize: 13, color: colors.sub, lineHeight: 1.5,
+                          display: "-webkit-box", WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical", overflow: "hidden",
+                          fontStyle: "italic",
+                        }}>"{snippet}"</p>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
