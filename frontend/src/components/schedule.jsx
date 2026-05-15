@@ -56,12 +56,18 @@ function hasConflict(sections) {
 }
 
 // Returns true for online/arranged sections that have no physical meeting time.
+// Banner stores these as "----- (ARR) -----" in time fields and "ONLINE" in endTime.
 function isVirtual(sec) {
-  const loc = (sec.location || '').toUpperCase();
+  if (!sec) return false;
+  const loc   = (sec.location  || '').toUpperCase();
+  const start = (sec.startTime || '').toUpperCase();
+  const end   = (sec.endTime   || '').toUpperCase();
   if (loc.includes('ONLINE') || loc === 'ARR') return true;
+  if (start.includes('ARR') || start.includes('-----')) return true;
+  if (end.includes('ONLINE') || end.includes('ARR')) return true;
   const days = sec.days || [];
-  if (days.length === 0 || days.every(d => d === 'ARR')) return true;
-  if (!sec.startTime) return true;
+  if (days.length === 0) return true;
+  if (days.some(d => (d || '').toUpperCase().includes('ARR'))) return true;
   return false;
 }
 

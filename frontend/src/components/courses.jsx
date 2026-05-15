@@ -16,14 +16,18 @@ function formatTime(t) {
 }
 
 // Returns true for online/arranged sections that have no physical meeting time.
-// Covers: empty days, "ARR" day code, or location containing "ONLINE".
+// Banner stores these as "----- (ARR) -----" in time fields and "ONLINE" in endTime.
 function isVirtual(section) {
   if (!section) return false;
-  const loc = (section.location || '').toUpperCase();
+  const loc   = (section.location  || '').toUpperCase();
+  const start = (section.startTime || '').toUpperCase();
+  const end   = (section.endTime   || '').toUpperCase();
   if (loc.includes('ONLINE') || loc === 'ARR') return true;
+  if (start.includes('ARR') || start.includes('-----')) return true;
+  if (end.includes('ONLINE') || end.includes('ARR')) return true;
   const days = section.days || [];
-  if (days.length === 0 || days.every(d => d === 'ARR')) return true;
-  if (!section.startTime) return true;
+  if (days.length === 0) return true;
+  if (days.some(d => (d || '').toUpperCase().includes('ARR'))) return true;
   return false;
 }
 
