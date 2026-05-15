@@ -55,14 +55,25 @@ function hasConflict(sections) {
   return null;
 }
 
+// Returns true for online/arranged sections that have no physical meeting time.
+function isVirtual(sec) {
+  const loc = (sec.location || '').toUpperCase();
+  if (loc.includes('ONLINE') || loc === 'ARR') return true;
+  const days = sec.days || [];
+  if (days.length === 0 || days.every(d => d === 'ARR')) return true;
+  if (!sec.startTime) return true;
+  return false;
+}
+
 // ── Schedule Grid View ────────────────────────────────────────────
 function ScheduleGrid({ sections, colorMap, darkMode, onRemove }) {
+  const dm = darkMode;
   const colors = {
-    bg: "#111111",
-    border: "rgba(255,255,255,0.08)",
-    text: "#f0edf3",
-    sub: "rgba(255,255,255,0.38)",
-    gridLine: "rgba(255,255,255,0.05)",
+    bg:       dm ? "#111111"                    : "#ffffff",
+    border:   dm ? "rgba(255,255,255,0.08)"     : "rgba(0,0,0,0.08)",
+    text:     dm ? "#f0edf3"                    : "#1c1a1e",
+    sub:      dm ? "rgba(255,255,255,0.38)"     : "rgba(0,0,0,0.38)",
+    gridLine: dm ? "rgba(255,255,255,0.05)"     : "rgba(0,0,0,0.05)",
   };
 
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
@@ -180,11 +191,13 @@ function ScheduleGrid({ sections, colorMap, darkMode, onRemove }) {
 
 // ── Schedule List View ────────────────────────────────────────────
 function ScheduleList({ sections, colorMap, darkMode, onRemove }) {
+  const dm = darkMode;
   const colors = {
-    bg: "#111111",
-    border: "rgba(255,255,255,0.08)",
-    text: "#f0edf3",
-    sub: "rgba(255,255,255,0.38)",
+    bg:     dm ? "#111111"                : "#ffffff",
+    border: dm ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+    text:   dm ? "#f0edf3"               : "#1c1a1e",
+    sub:    dm ? "rgba(255,255,255,0.38)" : "rgba(0,0,0,0.45)",
+    meta:   dm ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
   };
   const totalCredits = sections.reduce((s, sec) => s + (parseFloat(sec.credits) || 0), 0);
 
@@ -207,7 +220,7 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove }) {
           <div key={sec.crn} style={{
             background: colors.bg, border: `1.5px solid ${colors.border}`,
             borderRadius: 14, overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+            boxShadow: dm ? "none" : "0 1px 4px rgba(0,0,0,0.06)",
           }}>
             <div style={{ height: 5, background: col.border }} />
             <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
@@ -216,7 +229,7 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove }) {
                   <span style={{ background: col.border, color: "white", borderRadius: 7, padding: "3px 10px", fontWeight: 800, fontSize: 12 }}>
                     {sec.subject} {sec.courseNumber}
                   </span>
-                  <span style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 12, padding: "3px 8px", borderRadius: 7 }}>
+                  <span style={{ background: colors.meta, color: colors.sub, fontWeight: 700, fontSize: 12, padding: "3px 8px", borderRadius: 7 }}>
                     {sec.credits} cr
                   </span>
                   <span style={{ fontFamily: "monospace", fontSize: 11, color: colors.sub }}>CRN: {sec.crn}</span>
@@ -224,11 +237,16 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove }) {
                 <div style={{ display: "flex", gap: 16, fontSize: 13, color: colors.sub, flexWrap: "wrap" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
                     <ClockIcon size={13} />
-                    {sec.days.map(d => DAY_MAP[d] || d).join(", ")} · {formatTime(sec.startTime)} – {formatTime(sec.endTime)}
+                    {isVirtual(sec)
+                      ? <span style={{ color: "#0369a1", fontWeight: 600 }}>Meets virtually</span>
+                      : <>{sec.days.map(d => DAY_MAP[d] || d).join(", ")} · {formatTime(sec.startTime)} – {formatTime(sec.endTime)}</>
+                    }
                   </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <MapPinIcon size={13} />{sec.location}
-                  </span>
+                  {!isVirtual(sec) && (
+                    <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <MapPinIcon size={13} />{sec.location}
+                    </span>
+                  )}
                   {sec.instructor && (
                     <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
                       <UserIcon size={13} />{sec.instructor}
@@ -265,10 +283,10 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, setPage }) {
     return () => window.removeEventListener("resize", handler);
   }, []);
   const colors = {
-    bg: "#0a0a0a",
-    text: "#f0edf3",
-    sub: "rgba(255,255,255,0.38)",
-    border: "rgba(255,255,255,0.08)",
+    bg:     dm ? "#0a0a0a"                : "#f7f4f0",
+    text:   dm ? "#f0edf3"               : "#1c1a1e",
+    sub:    dm ? "rgba(255,255,255,0.38)" : "rgba(0,0,0,0.45)",
+    border: dm ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
   };
 
   // schedule is already an array of full section objects
@@ -282,9 +300,9 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, setPage }) {
   return (
     <div style={{ background: colors.bg, minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
-      <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: isMobile ? "24px 16px 20px" : "32px 24px 28px" }}>
+      <div style={{ borderBottom: `1px solid ${colors.border}`, padding: isMobile ? "24px 16px 20px" : "32px 24px 28px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <h1 style={{ margin: "0 0 4px", color: "white", fontWeight: 800, fontSize: isMobile ? 22 : 26 }}>Schedule Builder</h1>
+          <h1 style={{ margin: "0 0 4px", color: colors.text, fontWeight: 800, fontSize: isMobile ? 22 : 26 }}>Schedule Builder</h1>
           <p style={{ margin: 0, color: "rgba(255,255,255,0.38)", fontSize: 14 }}>
             Fall 2026 · {sections.length} section{sections.length !== 1 ? "s" : ""} · {courseKeys.length} course{courseKeys.length !== 1 ? "s" : ""}
           </p>
@@ -323,7 +341,7 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, setPage }) {
             <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
               {[["grid", <><GridIcon size={14} /> Weekly Grid</>],["list", <><ListIcon size={14} /> List View</>]].map(([v, label]) => (
                 <button key={v} onClick={() => setView(v)} style={{
-                  background: view === v ? "#861F41" : "#111111",
+                  background: view === v ? "#861F41" : colors.bg,
                   color: view === v ? "white" : colors.text,
                   border: `1.5px solid ${view === v ? "#861F41" : colors.border}`,
                   borderRadius: 9, padding: "8px 18px", cursor: "pointer",

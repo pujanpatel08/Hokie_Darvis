@@ -4,6 +4,29 @@ import { MOCK } from "../mock-data.js";
 import { API } from "../api.js";
 import { StarRating } from "./nav-auth.jsx";
 
+// ── Helpers ───────────────────────────────────────────────────────
+// "14:30" → "2:30 PM"
+function formatTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return t;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour   = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+// Returns true for online/arranged sections that have no physical meeting time.
+// Covers: empty days, "ARR" day code, or location containing "ONLINE".
+function isVirtual(section) {
+  if (!section) return false;
+  const loc = (section.location || '').toUpperCase();
+  if (loc.includes('ONLINE') || loc === 'ARR') return true;
+  const days = section.days || [];
+  if (days.length === 0 || days.every(d => d === 'ARR')) return true;
+  if (!section.startTime) return true;
+  return false;
+}
+
 // ── Input sanitization ────────────────────────────────────────────
 // Strips control chars, collapses whitespace, caps at 200 chars.
 // Used on all text inputs across this page.
@@ -94,7 +117,8 @@ function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, rmpMap,
   const colors = dm
     ? { border: "rgba(255,255,255,0.08)", text: "#f0edf3", sub: "rgba(255,255,255,0.38)" }
     : { border: "rgba(20,16,12,0.10)",   text: "#1a1210", sub: "rgba(20,16,12,0.55)" };
-  const full = section.seats > 0 ? section.enrolled >= section.seats : false;
+  const full    = section.seats > 0 ? section.enrolled >= section.seats : false;
+  const virtual = isVirtual(section);
   const instrName = section.instructor || 'Staff';
   const rmp = rmpMap?.[instrName];
 
@@ -129,10 +153,20 @@ function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, rmpMap,
         )}
       </div>
       <div style={{ color: colors.text, fontSize: 12 }}>
-        <div style={{ fontWeight: 700 }}>{section.days.join(" ")} {section.startTime}</div>
-        <div style={{ color: colors.sub }}>→ {section.endTime}</div>
+        {virtual ? (
+          <div style={{ fontWeight: 600, color: "#0369a1", fontSize: 12 }}>Meets virtually</div>
+        ) : (
+          <>
+            <div style={{ fontWeight: 700 }}>
+              {section.days.join(" ")} · {formatTime(section.startTime)}
+            </div>
+            <div style={{ color: colors.sub }}>→ {formatTime(section.endTime)}</div>
+          </>
+        )}
       </div>
-      <div style={{ color: colors.sub, fontSize: 12 }}>{section.location}</div>
+      <div style={{ color: colors.sub, fontSize: 12 }}>
+        {virtual ? "—" : section.location}
+      </div>
       <div><SeatsBadge seats={section.seats} enrolled={section.enrolled} /></div>
       <div>
         {inSchedule ? (
@@ -141,15 +175,21 @@ function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, rmpMap,
             borderRadius: 7, padding: "5px 12px", cursor: "pointer",
             fontWeight: 700, fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}>Remove</button>
+        ) : full ? (
+          <button onClick={() => onAdd(section)} style={{
+            background: "rgba(180,83,9,0.12)",
+            color: "#b45309",
+            border: "1.5px solid rgba(180,83,9,0.35)",
+            borderRadius: 7, padding: "5px 10px", cursor: "pointer",
+            fontWeight: 700, fontSize: 11, fontFamily: "'Plus Jakarta Sans', sans-serif",
+            lineHeight: 1.3, textAlign: "center",
+          }}>I'm enrolled</button>
         ) : (
-          <button onClick={() => !full && onAdd(section)} disabled={full} style={{
-            background: full ? "rgba(255,255,255,0.06)" : "#861F41",
-            color: full ? colors.sub : "white", border: "none",
-            borderRadius: 7, padding: "5px 12px",
-            cursor: full ? "not-allowed" : "pointer",
+          <button onClick={() => onAdd(section)} style={{
+            background: "#861F41", color: "white", border: "none",
+            borderRadius: 7, padding: "5px 12px", cursor: "pointer",
             fontWeight: 700, fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
-            opacity: full ? 0.5 : 1,
-          }}>{full ? "Full" : "Add"}</button>
+          }}>Add</button>
         )}
       </div>
     </div>
