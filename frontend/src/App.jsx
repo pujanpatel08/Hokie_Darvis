@@ -162,6 +162,7 @@ export default function App() {
           darkMode={darkMode}
           schedule={schedule}
           onAdd={addSection} onRemove={removeSection}
+          onCourseClick={openCourse}
           setPage={navigateTo}
         />
       );

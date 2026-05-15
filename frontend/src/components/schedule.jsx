@@ -1,5 +1,6 @@
 // Schedule Builder component
 import { useState, useEffect } from "react";
+import { API } from "../api.js";
 import { ClockIcon, MapPinIcon, UserIcon, AlertTriangleIcon, CalendarIcon, GridIcon, ListIcon } from "./icons.jsx";
 
 const DAYS = ["Mon","Tue","Wed","Thu","Fri"];
@@ -72,7 +73,7 @@ function isVirtual(sec) {
 }
 
 // ── Schedule Grid View ────────────────────────────────────────────
-function ScheduleGrid({ sections, colorMap, darkMode, onRemove }) {
+function ScheduleGrid({ sections, colorMap, darkMode, onRemove, courseMap, onCourseClick }) {
   const dm = darkMode;
   const colors = {
     bg:       dm ? "#111111"                    : "#ffffff",
@@ -164,13 +165,17 @@ function ScheduleGrid({ sections, colorMap, darkMode, onRemove }) {
               const col = COURSE_COLORS[colIdx % COURSE_COLORS.length];
               return (
                 <div key={sec.crn + day}
+                  onClick={() => onCourseClick && courseMap[`${sec.subject}-${sec.courseNumber}`] && onCourseClick(courseMap[`${sec.subject}-${sec.courseNumber}`])}
                   style={{
                     position: "absolute", left: 3, right: 3, top, height,
                     background: col.bg, border: `2px solid ${col.border}`,
                     borderRadius: 8, padding: "4px 7px", overflow: "hidden",
-                    cursor: "default", zIndex: 2,
+                    cursor: onCourseClick ? "pointer" : "default", zIndex: 2,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    transition: "opacity 0.15s",
                   }}
+                  onMouseEnter={e => { if (onCourseClick) e.currentTarget.style.opacity = "0.82"; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
                 >
                   <div style={{ fontWeight: 800, fontSize: 11, color: col.text, lineHeight: 1.2 }}>
                     {sec.subject} {sec.courseNumber}
@@ -196,7 +201,7 @@ function ScheduleGrid({ sections, colorMap, darkMode, onRemove }) {
 }
 
 // ── Schedule List View ────────────────────────────────────────────
-function ScheduleList({ sections, colorMap, darkMode, onRemove }) {
+function ScheduleList({ sections, colorMap, darkMode, onRemove, courseMap, onCourseClick }) {
   const dm = darkMode;
   const colors = {
     bg:     dm ? "#111111"                : "#ffffff",
@@ -222,16 +227,29 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove }) {
         const courseKey = `${sec.subject}-${sec.courseNumber}`;
         const colIdx = colorMap[courseKey] || 0;
         const col = COURSE_COLORS[colIdx % COURSE_COLORS.length];
+        const courseDetail = courseMap?.[courseKey];
+        const handleCardClick = (e) => {
+          // Don't open modal if the Remove button was clicked
+          if (e.target.closest('button')) return;
+          if (onCourseClick && courseDetail) onCourseClick(courseDetail);
+        };
         return (
-          <div key={sec.crn} style={{
-            background: colors.bg, border: `1.5px solid ${colors.border}`,
-            borderRadius: 14, overflow: "hidden",
-            boxShadow: dm ? "none" : "0 1px 4px rgba(0,0,0,0.06)",
-          }}>
+          <div key={sec.crn}
+            onClick={handleCardClick}
+            style={{
+              background: colors.bg, border: `1.5px solid ${colors.border}`,
+              borderRadius: 14, overflow: "hidden",
+              boxShadow: dm ? "none" : "0 1px 4px rgba(0,0,0,0.06)",
+              cursor: courseDetail && onCourseClick ? "pointer" : "default",
+              transition: "border-color 0.15s",
+            }}
+            onMouseEnter={e => { if (courseDetail && onCourseClick) e.currentTarget.style.borderColor = col.border; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; }}
+          >
             <div style={{ height: 5, background: col.border }} />
             <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: courseDetail?.title ? 4 : 6, flexWrap: "wrap" }}>
                   <span style={{ background: col.border, color: "white", borderRadius: 7, padding: "3px 10px", fontWeight: 800, fontSize: 12 }}>
                     {sec.subject} {sec.courseNumber}
                   </span>
@@ -240,6 +258,11 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove }) {
                   </span>
                   <span style={{ fontFamily: "monospace", fontSize: 11, color: colors.sub }}>CRN: {sec.crn}</span>
                 </div>
+                {courseDetail?.title && (
+                  <div style={{ fontWeight: 700, fontSize: 14, color: colors.text, marginBottom: 8, lineHeight: 1.3 }}>
+                    {courseDetail.title}
+                  </div>
+                )}
                 <div style={{ display: "flex", gap: 16, fontSize: 13, color: colors.sub, flexWrap: "wrap" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
                     <ClockIcon size={13} />
@@ -275,19 +298,36 @@ function ScheduleList({ sections, colorMap, darkMode, onRemove }) {
 }
 
 // ── Schedule Builder Page ─────────────────────────────────────────
-function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, setPage }) {
+function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, setPage, onCourseClick }) {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [view, setView] = useState(() => window.innerWidth < 768 ? "list" : "grid");
+  const [courseMap, setCourseMap] = useState({}); // keyed by "SUBJECT-number"
   const dm = darkMode;
 
   useEffect(() => {
-    const handler = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-    };
+    const handler = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
+
+  // Fetch course details for every unique course in the schedule so we
+  // can show titles and open the detail modal when a card is clicked.
+  useEffect(() => {
+    const uniqueKeys = [...new Set(schedule.map(s => `${s.subject}-${s.courseNumber}`))];
+    const missing = uniqueKeys.filter(k => !courseMap[k]);
+    if (missing.length === 0) return;
+
+    missing.forEach(key => {
+      const [subject, ...rest] = key.split("-");
+      const number = rest.join("-");
+      API.getCourse(subject, number)
+        .then(detail => {
+          setCourseMap(prev => ({ ...prev, [key]: detail }));
+        })
+        .catch(() => {});
+    });
+  }, [schedule]);
+
   const colors = {
     bg:     dm ? "#0a0a0a"                : "#f7f4f0",
     text:   dm ? "#f0edf3"               : "#1c1a1e",
@@ -359,11 +399,11 @@ function ScheduleBuilder({ darkMode, schedule, onAdd, onRemove, setPage }) {
             {view === "grid" ? (
               <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
                 <div style={{ minWidth: 600 }}>
-                  <ScheduleGrid sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} />
+                  <ScheduleGrid sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} courseMap={courseMap} onCourseClick={onCourseClick} />
                 </div>
               </div>
             ) : (
-              <ScheduleList sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} />
+              <ScheduleList sections={sections} colorMap={colorMap} darkMode={dm} onRemove={onRemove} courseMap={courseMap} onCourseClick={onCourseClick} />
             )}
           </>
         )}

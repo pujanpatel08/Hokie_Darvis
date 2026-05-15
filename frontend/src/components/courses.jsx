@@ -428,7 +428,7 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
   useEffect(() => {
     setDetailLoading(true);
     setDetail(null);
-    setTab('grades');
+    setTab('description');
     setShowAllInstructors(false);
     API.getCourse(course.subject, course.number)
       .then(d => { setDetail(d); setDetailLoading(false); })
@@ -547,6 +547,7 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
         {/* Tab bar */}
         <div style={{ display: "flex", borderBottom: `1px solid ${colors.border}`, padding: isMobile ? "0 20px" : "0 32px" }}>
           {[
+            ['description', 'Description'],
             ['grades',      'Grades'],
             ['instructors', `Instructors${profs.length ? ` (${profs.length})` : ''}`],
             ['sections',    `Sections${!sectionsLoading && sections.length ? ` (${sections.length})` : ''}`],
@@ -564,6 +565,44 @@ export function CourseDetail({ course, darkMode, schedule, onAdd, onRemove, onCl
             }}>{label}</button>
           ))}
         </div>
+
+        {/* ── Description tab ────────────────────────────── */}
+        {tab === 'description' && (
+          <div style={{ padding: isMobile ? "20px 20px 28px" : "28px 32px 32px" }}>
+            {/* Credits / pathways row */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+              <span style={{
+                fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+                background: dm ? "rgba(255,255,255,0.08)" : "#f0edf3",
+                color: colors.sub,
+              }}>
+                {course.credits} credit{course.credits !== 1 ? "s" : ""}
+              </span>
+              {(course.pathways || []).map(p => (
+                <span key={p} style={{
+                  fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+                  background: "rgba(134,31,65,0.1)", color: "#861F41",
+                }}>
+                  Pathway {p}
+                </span>
+              ))}
+            </div>
+
+            {/* Description body */}
+            {course.description ? (
+              <p style={{
+                margin: 0, fontSize: 15, color: colors.text,
+                lineHeight: 1.75, fontWeight: 400,
+              }}>
+                {course.description}
+              </p>
+            ) : (
+              <p style={{ margin: 0, fontSize: 14, color: colors.sub, fontStyle: "italic" }}>
+                No course description available.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* ── Grades tab ─────────────────────────────────── */}
         {tab === 'grades' && (
