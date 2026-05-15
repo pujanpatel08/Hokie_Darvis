@@ -10,6 +10,26 @@ export const API = {
   // Fetches in batches of 1000 and loops until the table is exhausted, so
   // the full catalog is always returned regardless of how many courses exist.
   async getCourses({ q, subjects, minGpa, minCredits, pathway } = {}) {
+    // CRN shortcut: if the query is purely numeric treat it as a CRN lookup.
+    // Sections live in a separate table, so we resolve subject+course_number
+    // from there and return the matching course row directly.
+    if (q && /^\d+$/.test(q.trim())) {
+      const { data: sec } = await db
+        .from('sections')
+        .select('subject, course_number')
+        .eq('crn', parseInt(q.trim(), 10))
+        .limit(1)
+        .maybeSingle();
+      if (!sec) return [];
+      const { data: row } = await db
+        .from('courses')
+        .select('*')
+        .eq('subject', sec.subject)
+        .eq('course_number', sec.course_number)
+        .maybeSingle();
+      return row ? [formatCourse(row)] : [];
+    }
+
     const BATCH = 1000;
     let allData = [];
     let offset  = 0;

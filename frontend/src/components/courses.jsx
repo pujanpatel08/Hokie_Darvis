@@ -1184,7 +1184,7 @@ export default function CourseSearch({ darkMode, schedule, onCourseClick, onProf
           <input
             value={query}
             onChange={e => setQuery(sanitizeQuery(e.target.value))}
-            placeholder="Search course name, number, or subject"
+            placeholder="Search by name, number, subject, or CRN"
             style={{
               width: "100%", padding: "14px 16px 14px 0",
               border: "none",
