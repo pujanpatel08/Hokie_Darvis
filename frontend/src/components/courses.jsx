@@ -180,20 +180,14 @@ function SectionRow({ section, onAdd, onRemove, inSchedule, onProfClick, rmpMap,
             fontWeight: 700, fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}>Remove</button>
         ) : full ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 5 }}>
-            <span style={{
-              fontSize: 11, fontWeight: 700, color: "#c0392b",
-              background: "#fee2e2", borderRadius: 5, padding: "2px 7px",
-            }}>Full</span>
-            <button onClick={() => onAdd(section)} style={{
-              background: "none",
-              color: "#b45309",
-              border: "1.5px solid rgba(180,83,9,0.4)",
-              borderRadius: 7, padding: "4px 8px", cursor: "pointer",
-              fontWeight: 700, fontSize: 11, fontFamily: "'Plus Jakarta Sans', sans-serif",
-              whiteSpace: "nowrap",
-            }}>I'm enrolled</button>
-          </div>
+          <button onClick={() => onAdd(section)} style={{
+            background: "none",
+            color: "#b45309",
+            border: "1.5px solid rgba(180,83,9,0.4)",
+            borderRadius: 7, padding: "5px 10px", cursor: "pointer",
+            fontWeight: 700, fontSize: 11, fontFamily: "'Plus Jakarta Sans', sans-serif",
+            whiteSpace: "nowrap",
+          }}>I'm enrolled</button>
         ) : (
           <button onClick={() => onAdd(section)} style={{
             background: "#861F41", color: "white", border: "none",
