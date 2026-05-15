@@ -170,13 +170,16 @@ export default function InstructorsPage({ darkMode }) {
     filterBar: dm ? "rgba(12,12,12,0.95)" : "rgba(250,248,245,0.95)",
   };
 
-  const [instructors, setInstructors]   = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [q, setQ]                       = useState("");
+  const PAGE_SIZE = 24;
+
+  const [instructors, setInstructors]     = useState([]);
+  const [loading, setLoading]             = useState(true);
+  const [q, setQ]                         = useState("");
   const [subjectFilter, setSubjectFilter] = useState([]);
-  const [sortBy, setSortBy]             = useState("name");
-  const [selectedProf, setSelectedProf] = useState(null);
-  const [isMobile, setIsMobile]         = useState(() => window.innerWidth < 768);
+  const [sortBy, setSortBy]               = useState("name");
+  const [currentPage, setCurrentPage]     = useState(1);
+  const [selectedProf, setSelectedProf]   = useState(null);
+  const [isMobile, setIsMobile]           = useState(() => window.innerWidth < 768);
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
@@ -226,10 +229,19 @@ export default function InstructorsPage({ darkMode }) {
     });
   }, [instructors, q, subjectFilter, sortBy]);
 
-  const toggleSubject = sub =>
+  const toggleSubject = sub => {
     setSubjectFilter(prev =>
       prev.includes(sub) ? prev.filter(s => s !== sub) : [...prev, sub]
     );
+    setCurrentPage(1);
+  };
+
+  // Reset to page 1 whenever search or sort changes
+  const handleSearch = val => { setQ(val); setCurrentPage(1); };
+  const handleSort   = val => { setSortBy(val); setCurrentPage(1); };
+
+  const totalPages  = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated   = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const inputPad = isMobile ? "0 16px" : "0 64px";
 
@@ -268,7 +280,7 @@ export default function InstructorsPage({ darkMode }) {
             </svg>
             <input
               value={q}
-              onChange={e => setQ(e.target.value)}
+              onChange={e => handleSearch(e.target.value)}
               placeholder="Search by last name..."
               style={{
                 width: "100%", boxSizing: "border-box",
@@ -331,7 +343,7 @@ export default function InstructorsPage({ darkMode }) {
             Sort
           </span>
           {[["name","Name"],["gpa","Avg GPA"],["rmp","RMP Rating"]].map(([id, label]) => (
-            <button key={id} onClick={() => setSortBy(id)} style={{
+            <button key={id} onClick={() => handleSort(id)} style={{
               fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 20,
               border: sortBy === id
                 ? "1.5px solid #861F41"
@@ -367,7 +379,6 @@ export default function InstructorsPage({ darkMode }) {
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <div style={{ fontSize: 40, marginBottom: 14 }}>🔍</div>
             <div style={{ fontWeight: 800, fontSize: 18, color: colors.text, marginBottom: 6 }}>
               No instructors found
             </div>
@@ -377,10 +388,14 @@ export default function InstructorsPage({ darkMode }) {
           </div>
         ) : (
           <>
+            {/* Result count */}
             <div style={{ fontSize: 13, color: colors.sub, fontWeight: 600, marginBottom: 20 }}>
               {filtered.length} instructor{filtered.length !== 1 ? "s" : ""}
               {q || subjectFilter.length > 0 ? " matching filters" : ""}
+              {totalPages > 1 && ` · page ${currentPage} of ${totalPages}`}
             </div>
+
+            {/* Grid */}
             <div style={{
               display: "grid",
               gridTemplateColumns: isMobile
@@ -388,7 +403,7 @@ export default function InstructorsPage({ darkMode }) {
                 : "repeat(auto-fill, minmax(280px, 1fr))",
               gap: 14,
             }}>
-              {filtered.map(instr => (
+              {paginated.map(instr => (
                 <InstructorCard
                   key={instr.name}
                   instr={instr}
@@ -397,6 +412,92 @@ export default function InstructorsPage({ darkMode }) {
                 />
               ))}
             </div>
+
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                gap: 8, marginTop: 40,
+              }}>
+                <button
+                  onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  disabled={currentPage === 1}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "8px 18px", borderRadius: 10,
+                    border: `1.5px solid ${colors.border}`,
+                    background: "none",
+                    color: currentPage === 1 ? colors.sub : colors.text,
+                    fontWeight: 700, fontSize: 13,
+                    cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    opacity: currentPage === 1 ? 0.4 : 1,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  Prev
+                </button>
+
+                {/* Page number pills */}
+                <div style={{ display: "flex", gap: 4 }}>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .reduce((acc, p, idx, arr) => {
+                      if (idx > 0 && p - arr[idx - 1] > 1) acc.push("…");
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((p, idx) =>
+                      p === "…" ? (
+                        <span key={`ellipsis-${idx}`} style={{
+                          padding: "6px 4px", fontSize: 13,
+                          color: colors.sub, fontWeight: 600,
+                          display: "flex", alignItems: "center",
+                        }}>…</span>
+                      ) : (
+                        <button
+                          key={p}
+                          onClick={() => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          style={{
+                            width: 36, height: 36, borderRadius: 9,
+                            border: p === currentPage ? "1.5px solid #861F41" : `1.5px solid ${colors.border}`,
+                            background: p === currentPage ? "rgba(134,31,65,0.15)" : "none",
+                            color: p === currentPage ? "#861F41" : colors.sub,
+                            fontWeight: p === currentPage ? 800 : 600,
+                            fontSize: 13, cursor: "pointer",
+                            fontFamily: "'Plus Jakarta Sans', sans-serif",
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          {p}
+                        </button>
+                      )
+                    )
+                  }
+                </div>
+
+                <button
+                  onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "8px 18px", borderRadius: 10,
+                    border: `1.5px solid ${colors.border}`,
+                    background: "none",
+                    color: currentPage === totalPages ? colors.sub : colors.text,
+                    fontWeight: 700, fontSize: 13,
+                    cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    opacity: currentPage === totalPages ? 0.4 : 1,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  Next
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
